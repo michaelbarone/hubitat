@@ -18,7 +18,7 @@
  * 
  */
 metadata {
-	definition (name: "Virtual Keypad Input Display Child", namespace: "mbarone", author: "mbarone") {
+	definition (name: "Virtual Keypad Input Display Child", namespace: "mbarone", author: "mbarone", importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/virtualKeypadInputDisplayChild.groovy") {
 	}
 
     preferences {

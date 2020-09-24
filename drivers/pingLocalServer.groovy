@@ -35,7 +35,7 @@
  
 
 metadata {
-	definition (name: "Ping Local Server", namespace: "mbarone", author: "mbarone") {
+	definition (name: "Ping Local Server", namespace: "mbarone", author: "mbarone", importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/pingLocalServer.groovy") {
 		capability "Polling"
 		capability "Refresh"
 		capability "Sensor"

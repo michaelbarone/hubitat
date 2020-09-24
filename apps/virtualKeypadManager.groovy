@@ -31,7 +31,8 @@
     description: "use virtual keypads on dashboards",
     category: "Convenience",
     iconUrl: "",
-    iconX2Url: "")
+    iconX2Url: "",
+	importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/apps/virtualKeypadManager.groovy")
 
 preferences {
 	page name: "mainPage", title: "", install: true, uninstall: true

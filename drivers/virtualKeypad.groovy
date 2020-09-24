@@ -22,7 +22,7 @@ import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
  
 metadata {
-	definition (name: "Virtual Keypad", namespace: "mbarone", author: "mbarone") {
+	definition (name: "Virtual Keypad", namespace: "mbarone", author: "mbarone", importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/virtualKeypad.groovy") {
 		capability "Lock Codes"
 	}
 

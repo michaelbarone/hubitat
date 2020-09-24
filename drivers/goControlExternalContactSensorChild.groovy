@@ -29,7 +29,8 @@ metadata {
 	definition (
 		name: "GoControl External Contact Sensor Child", 
 		namespace: "mbarone", 
-		author: "Kevin LaFramboise  - updated by mbarone"
+		author: "Kevin LaFramboise  - updated by mbarone",
+		importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/goControlExternalContactSensorChild.groovy"
 	) {
 		capability "Sensor"
 		capability "Contact Sensor"

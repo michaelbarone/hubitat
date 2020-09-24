@@ -15,7 +15,7 @@
  * 
  */
 metadata {
-	definition (name: "Ping Local Server Child", namespace: "mbarone", author: "mbarone") {
+	definition (name: "Ping Local Server Child", namespace: "mbarone", author: "mbarone", importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/pingLocalServerChild.groovy") {
 		capability "Actuator"
 		capability "Sensor"
 		capability "Switch"

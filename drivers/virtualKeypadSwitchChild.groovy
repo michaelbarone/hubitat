@@ -18,7 +18,7 @@
  * 
  */
 metadata {
-	definition (name: "Virtual Keypad Switch Child", namespace: "mbarone", author: "mbarone") {
+	definition (name: "Virtual Keypad Switch Child", namespace: "mbarone", author: "mbarone", importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/virtualKeypadSwitchChild.groovy") {
 		capability "Switch"
 		capability "Relay Switch"
 		capability "Actuator"

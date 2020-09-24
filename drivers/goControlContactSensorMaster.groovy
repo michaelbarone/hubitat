@@ -81,7 +81,8 @@ metadata {
 	definition (
 		name: "GoControl Contact Sensor Master", 
 		namespace: "mbarone", 
-		author: "Kevin LaFramboise - updated by mbarone"
+		author: "Kevin LaFramboise - updated by mbarone",
+		importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/goControlContactSensorMaster.groovy"
 	) {
 		capability "Sensor"
 		capability "Configuration"

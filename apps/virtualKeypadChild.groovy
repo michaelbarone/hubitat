@@ -33,7 +33,7 @@ definition(
     iconUrl: "",
     iconX2Url: "",
     iconX3Url: "",
-	importUrl: "",
+	importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/apps/virtualKeypadChild.groovy",
 )
 
 def installed() {

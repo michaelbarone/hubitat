@@ -2,7 +2,7 @@ preferences {
         input("src", "text", title: "iFrame Url",  required: true)
     }
 metadata {
-    definition (name: "iFrame", namespace: "mbarone", author: "mbarone") {
+    definition (name: "iFrame", namespace: "mbarone", author: "mbarone", importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/iFrame.groovy") {
         capability "Switch"
         attribute "myFrame", "text"
     }
