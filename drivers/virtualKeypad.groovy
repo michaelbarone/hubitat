@@ -218,7 +218,41 @@ def buttonPress(btn) {
 def createChildren(){
     if (logEnable) log.debug "Creating Child Devices"
 	
-	// create numbered button devices
+	// create number button device
+	def foundChildDevice = null
+	foundChildDevice = getChildDevice("${device.deviceNetworkId}-Number")
+
+	if(foundChildDevice=="" || foundChildDevice==null){
+
+		if (logEnable) log.debug "createChildDevice:  Creating Child Device '${device.displayName} (Number)'"
+		try {
+			def deviceHandlerName = "Virtual Keypad Number Button Child"
+			addChildDevice(deviceHandlerName,
+							"${device.deviceNetworkId}-Number",
+							[
+								completedSetup: true, 
+								label: "${device.displayName} (Number)", 
+								isComponent: true, 
+								componentName: Number, 
+								componentLabel: Number
+							]
+						)
+			sendEvent(name:"Details", value:"Child device created!  May take some time to display.")
+			unschedule(clearDetails)
+			runIn(300,clearDetails)
+		}
+		catch (e) {
+			log.error "Child device creation failed with error = ${e}"
+			sendEvent(name:"Details", value:"Child device creation failed. Please make sure that the '${deviceHandlerName}' is installed and published.", displayed: true)
+		}
+	} else {
+		if (logEnable) log.debug "createChildDevice: Child Device '${device.displayName} (Number)' found! Skipping"
+	}
+	
+	
+	
+	
+	/*
 	10.times{
 		def foundChildDevice = null
 		foundChildDevice = getChildDevice("${device.deviceNetworkId}-${it}")
@@ -250,17 +284,18 @@ def createChildren(){
 			if (logEnable) log.debug "createChildDevice: Child Device '${device.displayName} (${it})' found! Skipping"
 		}
 	}
+	*/
 	
 	// create text buttons
 	['Away','Party','Clear','Arm','ReArm','Disarm'].each {
-		def foundChildDevice = null
+		foundChildDevice = null
 		foundChildDevice = getChildDevice("${device.deviceNetworkId}-${it}")
 	
 		if(foundChildDevice=="" || foundChildDevice==null){
 	
 			if (logEnable) log.debug "createChildDevice:  Creating Child Device '${device.displayName} (${it})'"
 			try {
-				def deviceHandlerName = "Virtual Keypad Button Child"
+				def deviceHandlerName = "Virtual Keypad Command Button Child"
 				addChildDevice(deviceHandlerName,
 								"${device.deviceNetworkId}-${it}",
 								[
@@ -286,7 +321,7 @@ def createChildren(){
 	
 	// create switch triggers for custom modes
 	['TriggerAway','TriggerParty','TriggerArm'].each {
-		def foundChildDevice = null
+		foundChildDevice = null
 		foundChildDevice = getChildDevice("${device.deviceNetworkId}-${it}")
 	
 		if(foundChildDevice=="" || foundChildDevice==null){
@@ -319,7 +354,7 @@ def createChildren(){
 	
 	// create input display
 	['InputDisplay'].each {
-		def foundChildDevice = null
+		foundChildDevice = null
 		foundChildDevice = getChildDevice("${device.deviceNetworkId}-${it}")
 	
 		if(foundChildDevice=="" || foundChildDevice==null){

@@ -45,12 +45,17 @@ def updated() {
 }
 
 def push(evt) {
-	if (logEnable) log.debug "push() called"
-	sendEvent(name: "pushed", value: "1", isStateChange  : true)
-	def btn = device.deviceNetworkId.split("-")[-1]
-	parent.buttonPress("${btn}")
+	if (logEnable) log.debug "push(${evt}) called"
+	sendEvent(name: "pushed", value: evt, isStateChange  : true)
+	parent.buttonPress("${evt}")
+	
+	//sendEvent(name: "pushed", value: "1", isStateChange  : true)
+	//def btn = device.deviceNetworkId.split("-")[-1]
+	//parent.buttonPress("${btn}")
 }
 
+
+/*
 def parse(String description) {
 	log.debug "parse(${description}) called"
     if (logEnable) log.debug "parse(${description}) called"
@@ -65,7 +70,7 @@ def parse(String description) {
     //	log.error "Missing either name or value.  Cannot parse!"
     //}
 }
-
+*/
 
 
 
