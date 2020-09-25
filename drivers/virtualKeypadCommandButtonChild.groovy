@@ -18,7 +18,7 @@
  * 
  */
 metadata {
-	definition (name: "Virtual Keypad Command Button Child", namespace: "mbarone", author: "mbarone", importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/virtualKeypadButtonChild.groovy") {
+	definition (name: "Virtual Keypad Command Button Child", namespace: "mbarone", author: "mbarone", importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/virtualKeypadCommandButtonChild.groovy") {
 		capability "PushableButton"
 		capability "Momentary"
 		capability "Actuator"
