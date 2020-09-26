@@ -35,7 +35,6 @@ def logsOff(){
 
 def installed() {
     sendEvent(name: "InputDisplay", value: "Enter Code", displayed: false)
-	off()
     updated()
 }
 

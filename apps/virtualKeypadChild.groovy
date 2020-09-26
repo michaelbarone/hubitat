@@ -43,31 +43,18 @@ def installed() {
 
 def updated() {	
     if(logEnable) log.debug "Updated with settings: ${settings}"
-	
-	// send settings to child app
-	
 	unschedule()
     unsubscribe()
 	initialize()
 }
 
 def initialize() {
-    setDefaults()
-	
-	/*
-	if(getChildDevice(dataName)) {
-		subscribe(dataName, "switch", keypadSwitch)
-		subscribe(dataName, "button", keypadButton)
+	def theChild = getChildDevice(settings.dataName)
+	if(theChild) {
+		if(logEnable) log.debug "Child Keypad Found, applying settings and creating keypad children if needed"
+		theChild.configureSettings(settings)
 	}
-	*/
-	
-	/*
-    if(contactSensors) subscribe(contactSensors, "contact", contactGroupHandler)
-    if(locks) subscribe(locks, "lock", lockGroupHandler)
-	if(motionSensors) subscribe(motionSensors, "motion", motionGroupHandler)
-    if(switches) subscribe(switches, "switch", switchGroupHandler)
-    if(waterSensors) subscribe(waterSensors, "water", waterGroupHandler)
-	*/
+    setDefaults()
 }
 
 def uninstalled() {
@@ -78,19 +65,13 @@ private removeChildDevices(delete) {
 	delete.each {deleteChildDevice(it.deviceNetworkId)}
 }
 
-/*
-def keypadSwitch(evt) {
-	if(logEnable) log.debug "keypadSwitch: ${evt}"
-}
-
-def keypadButton(evt) {
-	if(logEnable) log.debug "keypadButton: ${evt}"
-}
-*/
-
 def setMode(mode){
 	if(logEnable) log.debug "setMode: ${mode}"
-	setLocationMode('Disarmed')
+	// check if mode in available modes
+	if(location.modes.any{mode.toString().contains(it.toString())}){
+		if(logEnable) log.debug "mode available and setting: ${mode}"
+		setLocationMode(mode)
+	}
 }
 
 
@@ -107,7 +88,7 @@ def pageConfig() {
 		}
         section(getFormat("header-green", "Virtual Keypad Device Creation")) {
             paragraph "Do not change the name of the keypad once fully configured"
-		    input "dataName", "text", title: "Enter a name for this vitual Device (ie. 'Keypad - Main')", required:true, submitOnChange:true
+		    input "dataName", "text", title: "Enter a name for this vitual Device (ie. 'Keypad - Main' or 'Keypad - Guest')", required:true, submitOnChange:true
  		    paragraph "<b>A device will automaticaly be created for you as soon as you click outside of this field.</b>"
 		    if(dataName) createKeypadChildDevice()
 			if(statusMessageD == null) statusMessageD = "Waiting on status message..."
@@ -123,34 +104,45 @@ def pageConfig() {
 				if (armDelay){
 					input "armDelaySeconds", "number", required: armDelay, range: "10..90", defaultValue: 30,
 						title: "Number of seconds before HSM arm commands are executed. Default: 30, range 10-90"
-				}
+
+
+					def theModes = location.modes.clone()
+					theModes = theModes.collect { "Mode-$it" }
+					def HSM = ["armAway", "armHome", "armNight", "disarm", "armRules", "disarmRules", "disarmAll", "armAll", "cancelAlerts"]
+					HSM = HSM.collect { "HSM-$it" }
+					theModes.addAll(HSM)
+					theModes.addAll(["Custom-Arm","Custom-ReArm"])
+
+
+					input "armDelaySecondsGroup", "enum", required: armDelay, multiple: true, options: theModes,
+						title: "What functions do you want to delay before executing?"
+				}				
+			}
+			
+			section(getFormat("header-green", "Virtual Keypad External Triggers")) {
+				paragraph "Each Mode and HSM button that is created also has a switch that can be used to trigger RM or other automations when that button is executed.  These switches will always turn on (and auto off) regardless of the below Mode and HSM options."
 			}
 
 			section(getFormat("header-green", "Virtual Keypad Mode Options")) {
-				input "changeModes", "bool", required: false, defaultValue: false, submitOnChange: true,
-					title: "Change select modes from keypad. Default: Off/false"
-				if (changeModes){
-					input "availableModes", "mode", required: changeModes, multiple: true,
-						title: "Allow these modes to be set from keypad"
-				}
+				input "changeModes", "bool", required: true, defaultValue: true, submitOnChange: true,
+					title: "Have the Keypad app change modes directly. Default: On/true"
 			}
 			
 			section(getFormat("header-green", "Virtual Keypad HSM Options")) {
+				/*
 				input "customHSM", "bool", required: false, defaultValue: false, submitOnChange: true,
 					title: "Toggle custom triggers for RM or other apps to run logic. Default: Off/false"
 				if (customHSM){
 					input "availableCustomHSM", "enum", required: customHSM, multiple: true, options: ["Arm","ReArm","Disarm"],
 						title: "Allow these generic HSM triggers to be toggled from keypad"
-				}				
-			
-				input "changeHSM", "bool", required: false, defaultValue: false, submitOnChange: true,
-					title: "Change select HSM modes from keypad. Default: Off/false"
-				if (changeHSM){
-					input "availableHSM", "enum", required: changeHSM, multiple: true, options: ["armAway", "armHome", "armNight", "disarm", "armRules", "disarmRules", "disarmAll", "armAll", "cancelAlerts"],
-						title: "Allow these HSM modes to be set from keypad"
 				}
-			}			
+				*/
+			
+				input "changeHSM", "bool", required: true, defaultValue: true, submitOnChange: true,
+					title: "Have the Keypad app change HSM directly. Default: On/true"
+			}
 
+			/*
 			section(getFormat("header-green", "Virtual Keypad Lock Codes")) {
 				paragraph "Set lock codes in the keypad device or using an app like Lock Code Manager"
 			
@@ -158,6 +150,7 @@ def pageConfig() {
 				//	paragraph "${theChildDevice.getLockCodes()}"
 				//}
 			}
+			*/
 		}
 		
         section(getFormat("header-green", "Maintenance")) {

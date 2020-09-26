@@ -22,6 +22,7 @@ metadata {
 		capability "PushableButton"
 		capability "Momentary"
 		capability "Actuator"
+		capability "Switch"
 	}
 
     preferences {
@@ -48,9 +49,24 @@ def push(evt) {
 	if (logEnable) log.debug "push() called"
 	sendEvent(name: "pushed", value: "1", isStateChange  : true)
 	def btn = device.deviceNetworkId.split("-")[-1]
-	parent.buttonPress("${btn}")
+	if(btn == "Clear"){
+		parent.buttonPress("${btn}")
+	} else {
+		btn = device.deviceNetworkId.split("-")[-2]+"-"+btn
+		parent.buttonPress("${btn}")
+	}
 }
 
+def on() {
+	if (logEnable) log.debug "on() called"
+	sendEvent(name: "switch", value: "on")
+	runIn(5,off)
+}
+
+def off() {
+	if (logEnable) log.debug "off() called"
+	sendEvent(name: "switch", value: "off")
+}
 
 /*
 def parse(String description) {

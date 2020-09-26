@@ -35,22 +35,34 @@ metadata {
 
     command "createChildren"
 	command "removeChild", [[name:"deviceNetworkID*",type:"STRING"]]
+}
+
+def configureSettings(settings){
+	settings.each{
+		switch(it.key){
+			case "armDelay":
+				state.armDelay = it.value
+				break
+
+			case "armDelaySeconds":
+				state.armDelaySeconds = it.value
+				break
 	
-	command "ModeDisarmed"
+			case "armDelaySecondsGroup":
+				state.armDelaySecondsGroup = it.value
+				break
+				
+			case "changeHSM":
+				state.changeHSM = it.value
+				break
+				
+			case "changeModes":
+				state.changeModes = it.value
+				break
+		}
+	}
+	createChildren()
 }
-
-
-def ModeDisarmed(){
-	if (logEnable) log.debug "ModeDisarmed"
-	log.debug location.mode
-	parent.setMode("test")
-	pauseExecution(1000)
-	log.debug location.mode
-}
-
-
-
-
 
 def logsOff(){
     log.warn "debug logging disabled..."
@@ -60,7 +72,6 @@ def logsOff(){
 def installed() {
 	clearCode()
     updated()
-	createChildren()
     sendEvent(name:"maxCodes",value:20)
     sendEvent(name:"codeLength",value:4)
 }
@@ -74,62 +85,75 @@ def updated() {
 	}
 }
 
-
-def buttonAway(){
-	if(checkInputCode("Away")){
-		if (logEnable) log.debug "buttonAway code accepted"
-		def childDevice = getChildDevice("${device.deviceNetworkId}-TriggerAway")
+def commandMode(action,btn){
+	if(checkInputCode(btn)){
+		if(state.armDelay && state.armDelaySecondsGroup.any{btn.contains(it)}){
+			def childDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
+			def timeLeft = state.armDelaySeconds
+			state.armDelaySeconds.times{
+				timeLeft = timeLeft - 1
+				childDevice?.updateInputDisplay("Setting ${action} in ${timeLeft} seconds")
+				pauseExecution(1000)
+			}
+		}
+		unschedule(clearCode)
+		clearCode()
+		if(state.changeModes){
+			parent.setMode(action)
+		}
+		def childDevice = getChildDevice("${device.deviceNetworkId}-${btn}")
 		childDevice?.on()
-		pauseExecution(3500)
-		childDevice = getChildDevice("${device.deviceNetworkId}-TriggerArm")
-		childDevice?.on()
-	} else {
-		if (logEnable) log.debug "buttonAway code NOT accepted"
 	}
 }
 
-def buttonParty(){
-	if(checkInputCode("Party")){
-		if (logEnable) log.debug "buttonParty code accepted"
-		def childDevice = getChildDevice("${device.deviceNetworkId}-TriggerParty")
+def commandHSM(action,btn){
+	if(checkInputCode(btn)){
+		if(state.armDelay && state.armDelaySecondsGroup.any{btn.contains(it)}){
+			def childDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
+			def timeLeft = state.armDelaySeconds
+			state.armDelaySeconds.times{
+				timeLeft = timeLeft - 1
+				childDevice?.updateInputDisplay("Setting ${action} in ${timeLeft} seconds")
+				pauseExecution(1000)
+			}
+		}
+		unschedule(clearCode)
+		clearCode()	
+		if(state.changeModes){
+			sendLocationEvent(name: "hsmSetArm", value: action, descriptionText: "Keypad Event ${action}")
+		}
+		def childDevice = getChildDevice("${device.deviceNetworkId}-${btn}")
 		childDevice?.on()
-	} else {
-		if (logEnable) log.debug "buttonParty code NOT accepted"
 	}
 }
 
-def buttonReArm(){
-	if(checkInputCode("ReArm")){
-		if (logEnable) log.debug "buttonReArm code accepted"
-		sendLocationEvent(name: "hsmSetArm", value: 'disarm', descriptionText: "Keypad Event")
-		pauseExecution(3500)
-		def childDevice = getChildDevice("${device.deviceNetworkId}-TriggerArm")
+def commandCustom(action,btn){
+	if(checkInputCode(btn)){
+		if(action=="ReArm"){
+			sendLocationEvent(name: "hsmSetArm", value: "disarm", descriptionText: "Keypad Event ${action}")
+		}
+
+		if(state.armDelay && state.armDelaySecondsGroup.any{btn.contains(it)}){
+			def childDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
+			def timeLeft = state.armDelaySeconds
+			state.armDelaySeconds.times{
+				timeLeft = timeLeft -  1
+				childDevice?.updateInputDisplay("Setting ${action} in ${timeLeft} seconds")
+				pauseExecution(1000)
+			}
+		}
+		unschedule(clearCode)
+		clearCode()
+		def childDevice = getChildDevice("${device.deviceNetworkId}-${btn}")
 		childDevice?.on()
-	} else {
-		if (logEnable) log.debug "buttonReArm code NOT accepted"
 	}
 }
 
-def buttonArm(){
-	if(checkInputCode("Arm")){
-		if (logEnable) log.debug "buttonArm code accepted"
-		def childDevice = getChildDevice("${device.deviceNetworkId}-TriggerArm")
-		childDevice?.on()
-	} else {
-		if (logEnable) log.debug "buttonArm code NOT accepted"
-	}
-}
 
-def buttonDisarm(){
-	if(checkInputCode("Disarm")){
-		if (logEnable) log.debug "buttonDisarm code accepted"
-		sendLocationEvent(name: "hsmSetArm", value: 'disarm', descriptionText: "Keypad Event")
-	} else {
-		if (logEnable) log.debug "buttonDisarm code NOT accepted"
-	}
-}
 
-def checkInputCode(func){
+
+
+def checkInputCode(btn){
 	if (logEnable) log.debug "checkInputCode"
 	
 	def codeAccepted = false
@@ -139,21 +163,21 @@ def checkInputCode(func){
         Map data = ["${lockCode.key}":lockCode.value]
         String descriptionText = "${device.displayName} was unlocked by ${lockCode.value.name}"
         if (txtEnable) log.info "${descriptionText}"
-        if (optEncrypt) data = encrypt(JsonOutput.toJson(data))
+        //if (optEncrypt) data = encrypt(JsonOutput.toJson(data))
         //sendEvent(name:"lock",value:"unlocked",descriptionText: descriptionText, type:"physical",data:data, isStateChange: true)
         //sendEvent(name:"lastCodeName", value: lockCode.value.name, descriptionText: descriptionText, isStateChange: true)
-		sendEvent(name:"UserInput", value: "Success", descriptionText: descriptionText + " " + func, displayed: true)
+		sendEvent(name:"UserInput", value: "Success", descriptionText: descriptionText + " " + btn, displayed: true)
 		codeAccepted = true
+		if (logEnable) log.debug "${btn} code accepted"		
     } else {
         if (txtEnable) log.debug "testUnlockWithCode failed with invalid code"
     }
 
 	if(codeAccepted == false){
 		sendEvent(name:"UserInput", value: "Failed", descriptionText: "Code input Failed ("+state.code+")", displayed: true)
+		if (logEnable) log.debug "${btn} code NOT accepted"
 	}
 
-	unschedule(clearCode)
-	clearCode()
 	return codeAccepted
 }
 
@@ -174,44 +198,44 @@ def buttonPress(btn) {
 	unschedule(clearCode)
 	if (logEnable) log.debug btn
 
-	switch(btn){
-		case "Clear":
-			clearCode()
-			break
-		
-		case "Away":
-			buttonAway()
-			break
-
-		case "Party":
-			buttonParty()
-			break
-
-		case "ReArm":
-			buttonReArm()
-			break			
-
-		case "Arm":
-			buttonArm()
-			break
-
-		case "Disarm":
-			buttonDisarm()
-			break			
-		
-		default:
-			state.code = state.code+""+btn
-			if(state.codeInput == "Enter Code"){
-				state.codeInput = "*"
-			} else {
-				state.codeInput = state.codeInput+"*"
-			}
-			def childDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
-			childDevice?.updateInputDisplay(state.codeInput)
-			unschedule(clearCode)
-			runIn(30,clearCode)
-			break
+	if(btn=="Clear"){
+		clearCode()
+		return
 	}
+
+	if(btn.isNumber()){
+		state.code = state.code+""+btn
+		if(state.codeInput == "Enter Code"){
+			state.codeInput = "*"
+		} else {
+			state.codeInput = state.codeInput+"*"
+		}
+		def childDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
+		childDevice?.updateInputDisplay(state.codeInput)
+		unschedule(clearCode)
+		runIn(30,clearCode)
+		return
+	}
+
+	def type = btn.split("-")[-2]
+	def action = btn.split("-")[-1]
+	if(type=="Mode"){
+		if (logEnable) log.debug "button is mode"
+		commandMode(action,btn)
+		return
+	}
+
+	if(type=="HSM"){
+		if (logEnable) log.debug "button is HSM"
+		commandHSM(action,btn)
+		return
+	}
+	
+	if(type=="Custom"){
+		if (logEnable) log.debug "button is Custom"
+		commandCustom(action,btn)
+		return
+	}	
 }
 
 
@@ -249,45 +273,17 @@ def createChildren(){
 		if (logEnable) log.debug "createChildDevice: Child Device '${device.displayName} (Number)' found! Skipping"
 	}
 	
-	
-	
-	
-	/*
-	10.times{
-		def foundChildDevice = null
-		foundChildDevice = getChildDevice("${device.deviceNetworkId}-${it}")
-	
-		if(foundChildDevice=="" || foundChildDevice==null){
+	// create command buttons
+	def theCommands = location.modes.clone()
+	theCommands = theCommands.collect { "Mode-$it" }
+	//log.debug theCommands
+	def HSM = ["armAway", "armHome", "armNight", "disarm", "armRules", "disarmRules", "disarmAll", "armAll", "cancelAlerts"]
+	HSM = HSM.collect { "HSM-$it" }
+	theCommands.addAll(HSM)
+	theCommands.addAll(["Clear","Custom-Arm","Custom-ReArm","Custom-Disarm"])
+	//log.debug theCommands
 
-			if (logEnable) log.debug "createChildDevice:  Creating Child Device '${device.displayName} (${it})'"
-			try {
-				def deviceHandlerName = "Virtual Keypad Button Child"
-				addChildDevice(deviceHandlerName,
-								"${device.deviceNetworkId}-${it}",
-								[
-									completedSetup: true, 
-									label: "${device.displayName} (${it})", 
-									isComponent: true, 
-									componentName: it, 
-									componentLabel: it
-								]
-							)
-				sendEvent(name:"Details", value:"Child device created!  May take some time to display.")
-				unschedule(clearDetails)
-				runIn(300,clearDetails)
-			}
-			catch (e) {
-				log.error "Child device creation failed with error = ${e}"
-				sendEvent(name:"Details", value:"Child device creation failed. Please make sure that the '${deviceHandlerName}' is installed and published.", displayed: true)
-			}
-		} else {
-			if (logEnable) log.debug "createChildDevice: Child Device '${device.displayName} (${it})' found! Skipping"
-		}
-	}
-	*/
-	
-	// create text buttons
-	['Away','Party','Clear','Arm','ReArm','Disarm'].each {
+	theCommands.each {
 		foundChildDevice = null
 		foundChildDevice = getChildDevice("${device.deviceNetworkId}-${it}")
 	
@@ -296,39 +292,6 @@ def createChildren(){
 			if (logEnable) log.debug "createChildDevice:  Creating Child Device '${device.displayName} (${it})'"
 			try {
 				def deviceHandlerName = "Virtual Keypad Command Button Child"
-				addChildDevice(deviceHandlerName,
-								"${device.deviceNetworkId}-${it}",
-								[
-									completedSetup: true, 
-									label: "${device.displayName} (${it})", 
-									isComponent: true, 
-									componentName: "${it}", 
-									componentLabel: "${it}"
-								]
-							)
-				sendEvent(name:"Details", value:"Child device created!  May take some time to display.")
-				unschedule(clearDetails)
-				runIn(300,clearDetails)
-			}
-			catch (e) {
-				log.error "Child device creation failed with error = ${e}"
-				sendEvent(name:"Details", value:"Child device creation failed. Please make sure that the '${deviceHandlerName}' is installed and published.", displayed: true)
-			}
-		} else {
-			if (logEnable) log.debug "createChildDevice: Child Device '${device.displayName} (${it})' found! Skipping"
-		}
-	}
-	
-	// create switch triggers for custom modes
-	['TriggerAway','TriggerParty','TriggerArm'].each {
-		foundChildDevice = null
-		foundChildDevice = getChildDevice("${device.deviceNetworkId}-${it}")
-	
-		if(foundChildDevice=="" || foundChildDevice==null){
-	
-			if (logEnable) log.debug "createChildDevice:  Creating Child Device '${device.displayName} (${it})'"
-			try {
-				def deviceHandlerName = "Virtual Keypad Switch Child"
 				addChildDevice(deviceHandlerName,
 								"${device.deviceNetworkId}-${it}",
 								[
