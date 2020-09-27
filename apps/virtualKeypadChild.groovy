@@ -142,15 +142,11 @@ def pageConfig() {
 					title: "Have the Keypad app change HSM directly. Default: On/true"
 			}
 
-			/*
+
 			section(getFormat("header-green", "Virtual Keypad Lock Codes")) {
 				paragraph "Set lock codes in the keypad device or using an app like Lock Code Manager"
-			
-				//if(theChildDevice.getLockCodes()){
-				//	paragraph "${theChildDevice.getLockCodes()}"
-				//}
 			}
-			*/
+
 		}
 		
         section(getFormat("header-green", "Maintenance")) {
@@ -166,7 +162,6 @@ def display() {
     theName = app.label
     if(theName == null || theName == "") theName = "New Child App"
     section (getFormat("title", "${state.name} - ${theName}")) {
-        //paragraph "${state.headerMessage}"
 		paragraph getFormat("line")
 	}
 }

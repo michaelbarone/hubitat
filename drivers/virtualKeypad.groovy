@@ -15,7 +15,7 @@
  *
  *    Date        Who            What
  *    ----        ---            ----
- * 
+ * 	 9-26-20	mbarone			initial release 
  */
 
 import groovy.json.JsonSlurper
@@ -242,6 +242,7 @@ def buttonPress(btn) {
 def createChildren(){
     if (logEnable) log.debug "Creating Child Devices"
 	
+	/*
 	// create number button device
 	def foundChildDevice = null
 	foundChildDevice = getChildDevice("${device.deviceNetworkId}-Number")
@@ -272,15 +273,16 @@ def createChildren(){
 	} else {
 		if (logEnable) log.debug "createChildDevice: Child Device '${device.displayName} (Number)' found! Skipping"
 	}
+	*/
 	
-	// create command buttons
+	// create buttons
 	def theCommands = location.modes.clone()
 	theCommands = theCommands.collect { "Mode-$it" }
 	//log.debug theCommands
 	def HSM = ["armAway", "armHome", "armNight", "disarm", "armRules", "disarmRules", "disarmAll", "armAll", "cancelAlerts"]
 	HSM = HSM.collect { "HSM-$it" }
 	theCommands.addAll(HSM)
-	theCommands.addAll(["Clear","Custom-Arm","Custom-ReArm","Custom-Disarm"])
+	theCommands.addAll(["Clear","Custom-Arm","Custom-ReArm","Custom-Disarm","Number"])
 	//log.debug theCommands
 
 	theCommands.each {
@@ -291,7 +293,7 @@ def createChildren(){
 	
 			if (logEnable) log.debug "createChildDevice:  Creating Child Device '${device.displayName} (${it})'"
 			try {
-				def deviceHandlerName = "Virtual Keypad Command Button Child"
+				def deviceHandlerName = "Virtual Keypad Button Child"
 				addChildDevice(deviceHandlerName,
 								"${device.deviceNetworkId}-${it}",
 								[

@@ -100,7 +100,6 @@ def display() {
     theName = app.label
     if(theName == null || theName == "") theName = "New Child App"
     section (getFormat("title", "${state.name} - ${theName}")) {
-        //paragraph "${state.headerMessage}"
 		paragraph getFormat("line")
 	}
 }

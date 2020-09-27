@@ -15,7 +15,7 @@
  *
  *    Date        Who            What
  *    ----        ---            ----
- * 
+ * 	 9-26-20	mbarone			initial release
  */
 metadata {
 	definition (name: "Virtual Keypad Command Button Child", namespace: "mbarone", author: "mbarone", importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/virtualKeypadCommandButtonChild.groovy") {
@@ -67,52 +67,3 @@ def off() {
 	if (logEnable) log.debug "off() called"
 	sendEvent(name: "switch", value: "off")
 }
-
-/*
-def parse(String description) {
-	log.debug "parse(${description}) called"
-    if (logEnable) log.debug "parse(${description}) called"
-	//def parts = description.split(" ")
-    //def name  = parts.length>0?parts[0].trim():null
-    //def value = parts.length>1?parts[1].trim():null
-    //if (name && value) {
-        // Update device
-        sendEvent(name: "pushed", value: "1", isStateChange  : true)
-    //}
-    //else {
-    //	log.error "Missing either name or value.  Cannot parse!"
-    //}
-}
-*/
-
-
-
-/*
-def on() {
-    sendData("on")
-}
-
-def off() {
-    sendData("off")
-}
-
-def sendData(String value) {
-    def name = device.deviceNetworkId.split("-")[-1]
-    parent.sendData("${name} ${value}")  
-}
-
-def parse(String description) {
-    if (logEnable) log.debug "parse(${description}) called"
-	def parts = description.split(" ")
-    def name  = parts.length>0?parts[0].trim():null
-    def value = parts.length>1?parts[1].trim():null
-    if (name && value) {
-        // Update device
-        sendEvent(name: name, value: value)
-    }
-    else {
-    	log.error "Missing either name or value.  Cannot parse!"
-    }
-}
-*/
-

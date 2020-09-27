@@ -15,7 +15,7 @@
  *
  *    Date        Who            What
  *    ----        ---            ----
- * 
+ * 	 9-26-20	mbarone			initial release
  */
 metadata {
 	definition (name: "Virtual Keypad Input Display Child", namespace: "mbarone", author: "mbarone", importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/virtualKeypadInputDisplayChild.groovy") {
@@ -45,19 +45,3 @@ def updated() {
 def updateInputDisplay(text){
 	sendEvent(name: "InputDisplay", value: text, displayed: false)
 }
-
-/*
-def parse(String description) {
-    if (logEnable) log.debug "parse(${description}) called"
-	def parts = description.split(" ")
-    def name  = parts.length>0?parts[0].trim():null
-    def value = parts.length>1?parts[1].trim():null
-    if (name && value) {
-        // Update device
-        sendEvent(name: name, value: value)
-    }
-    else {
-    	log.error "Missing either name or value.  Cannot parse!"
-    }
-}
-*/
