@@ -38,6 +38,9 @@ metadata {
 }
 
 def configureSettings(settings){
+	state.noCodeRequired = ["none"]
+	state.defaultMode = ""
+	state.defaultModeTrigger = ["none"]
 	settings.each{
 		switch(it.key){
 			case "armDelay":
@@ -71,6 +74,14 @@ def configureSettings(settings){
 			case "noCodeRequired":
 				state.noCodeRequired = it.value
 				break
+				
+			case "defaultMode":
+				state.defaultMode = it.value
+				break
+
+			case "defaultModeTrigger":
+				state.defaultModeTrigger = it.value
+				break				
 		}
 	}
 	createChildren()
@@ -101,6 +112,9 @@ def updated() {
 def commandMode(action,btn){
 	def displayDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
 	if(checkInputCode(btn)){
+		if(state.defaultMode != "" && state.defaultModeTrigger.any{btn.contains(it)}){
+			parent.setMode(state.defaultMode)
+		}
 		if(state.armDelay && state.armDelaySecondsGroup.any{btn.contains(it)}){
 			def timeLeft = state.armDelaySeconds
 			state.armDelaySeconds.times{
@@ -148,10 +162,9 @@ def commandCustom(action,btn){
 	def displayDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
 	if(checkInputCode(btn)){
 		if(action=="ReArm"){
-			// this should run the custom-disarm.on()
-			sendLocationEvent(name: "hsmSetArm", value: "disarm", descriptionText: "Keypad Event ${action}")
+			displayDevice?.updateInputDisplay("Success.  Executing Disarm")
+			getChildDevice("${device.deviceNetworkId}-Custom-Disarm")?.on()
 		}
-
 		if(state.armDelay && state.armDelaySecondsGroup.any{btn.contains(it)}){
 			def timeLeft = state.armDelaySeconds
 			state.armDelaySeconds.times{
@@ -160,9 +173,13 @@ def commandCustom(action,btn){
 				pauseExecution(1000)
 			}
 		}
-		displayDevice?.updateInputDisplay("Success.  Executing ${action}")
-		def commandChildDevice = getChildDevice("${device.deviceNetworkId}-${btn}")
-		commandChildDevice?.on()
+		if(action=="ReArm"){
+			displayDevice?.updateInputDisplay("Success.  Executing Arm")
+			getChildDevice("${device.deviceNetworkId}-Custom-Arm")?.on()
+		} else {		
+			displayDevice?.updateInputDisplay("Success.  Executing ${action}")
+			getChildDevice("${device.deviceNetworkId}-${btn}")?.on()
+		}
 	} else {
 		displayDevice?.updateInputDisplay("Input Denied")
 	}

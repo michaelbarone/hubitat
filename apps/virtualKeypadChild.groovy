@@ -113,29 +113,45 @@ def pageConfig() {
 			section(getFormat("header-green", "Virtual Keypad Device Settings")) {
 				paragraph "Configure your keypad options"
 				input "armDelay", "bool", required: false, defaultValue: false, submitOnChange: true,
-					title: "Delay before setting HSM arm commands. Default: Off/false"
+					title: "Delay before executing button commands. Default: Off/false"
 				if (armDelay){
 					input "armDelaySeconds", "number", required: armDelay, range: "10..90", defaultValue: 30,
-						title: "Number of seconds before HSM arm commands are executed. Default: 30, range 10-90"
+						title: "Number of seconds before button commands are executed. Default: 30, range 10-90"
 
 					input "armDelaySecondsGroup", "enum", required: armDelay, multiple: true, options: theModes,
-						title: "What functions do you want to delay before executing?"
+						title: "What commands do you want to delay before executing?"
 				}
 				
 				paragraph ""
-				paragraph "Select Devices you do NOT require a code to execute"
+				paragraph ""
+				paragraph "Select commands you do NOT require a code to execute:"
 				input "noCodeRequired", "enum", required: false, multiple: true, options: theModes,
-					title: "These devices need NO code to execute"
+					title: "These commands need NO code to execute"
 				
 			}
 			
 			section(getFormat("header-green", "Virtual Keypad External Triggers")) {
 				paragraph "Each Mode and HSM button that is created also has a switch that can be used to trigger RM or other automations when that button is executed.  These switches will always turn on (and auto off) regardless of the below Mode and HSM options."
+			
+				paragraph "There are 3 built in Custom triggers that you can use to trigger RM or other custom automations.  These do not change modes or HSM directly, only turn on their individual switch when triggered:"
+				paragraph "Custom-Arm - turns on the Custom-Arm switch"
+				paragraph "Custom-Disarm - turns on the Custom-Disarm switch"
+				paragraph "Custom-ReArm - turns on the Custom-Disarm switch, then turns on the Custom-Arm switch (after a delay if this option is enabled for Custom-ReArm)"
 			}
 
 			section(getFormat("header-green", "Virtual Keypad Mode Options")) {
 				input "changeModes", "bool", required: true, defaultValue: true, submitOnChange: true,
 					title: "Have the Keypad app change modes directly. Default: On/true"
+					
+				if(changeModes){
+					paragraph "change to specific mode before executing final mode change"
+				
+					input "defaultMode", "mode", required: false, multiple: false, submitOnChange: true,
+						title: "Change to this mode before executing the below modes"	
+					
+					input "defaultModeTrigger", "mode", required: defaultMode, multiple: true,
+						title: "These modes will execute after switching to the above mode (after delay if set)"
+				}
 			}
 			
 			section(getFormat("header-green", "Virtual Keypad HSM Options")) {
