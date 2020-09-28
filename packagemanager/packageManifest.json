@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "minimumHEVersion": "2.1.9",
   "dateReleased": "2020-09-28",
+  "communityLink": "link.to.forum.thread",
+  "releaseNotes": "These are the changes in this version. Please look at the community thread.",  
   "apps": [
     {
       "id": "e41757e7-0cf8-4fbd-bdb8-07f63b9ac51a",
