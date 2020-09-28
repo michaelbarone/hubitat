@@ -59,6 +59,15 @@ def configureSettings(settings){
 			case "changeModes":
 				state.changeModes = it.value
 				break
+				
+			case "notify":
+				state.notify = it.value
+				break
+				
+			case "notifyLimit":
+				state.notifyLimit = it.value
+				break			
+				
 		}
 	}
 	createChildren()
@@ -74,6 +83,7 @@ def installed() {
     updated()
     sendEvent(name:"maxCodes",value:20)
     sendEvent(name:"codeLength",value:4)
+	state.notifyCount = 0
 }
 
 def updated() {
@@ -96,14 +106,14 @@ def commandMode(action,btn){
 				pauseExecution(1000)
 			}
 		}
-		unschedule(clearCode)
-		clearCode()
 		if(state.changeModes){
 			parent.setMode(action)
 		}
 		def childDevice = getChildDevice("${device.deviceNetworkId}-${btn}")
 		childDevice?.on()
 	}
+	unschedule(clearCode)
+	clearCode()	
 }
 
 def commandHSM(action,btn){
@@ -117,14 +127,14 @@ def commandHSM(action,btn){
 				pauseExecution(1000)
 			}
 		}
-		unschedule(clearCode)
-		clearCode()	
 		if(state.changeModes){
 			sendLocationEvent(name: "hsmSetArm", value: action, descriptionText: "Keypad Event ${action}")
 		}
 		def childDevice = getChildDevice("${device.deviceNetworkId}-${btn}")
 		childDevice?.on()
 	}
+	unschedule(clearCode)
+	clearCode()	
 }
 
 def commandCustom(action,btn){
@@ -142,11 +152,11 @@ def commandCustom(action,btn){
 				pauseExecution(1000)
 			}
 		}
-		unschedule(clearCode)
-		clearCode()
 		def childDevice = getChildDevice("${device.deviceNetworkId}-${btn}")
 		childDevice?.on()
 	}
+	unschedule(clearCode)
+	clearCode()
 }
 
 
@@ -168,16 +178,17 @@ def checkInputCode(btn){
         //sendEvent(name:"lastCodeName", value: lockCode.value.name, descriptionText: descriptionText, isStateChange: true)
 		sendEvent(name:"UserInput", value: "Success", descriptionText: descriptionText + " " + btn, displayed: true)
 		codeAccepted = true
-		if (logEnable) log.debug "${btn} code accepted"		
+		if (logEnable) log.debug "${btn} code accepted"	
+		state.notifyCount = 0		
     } else {
-        if (txtEnable) log.debug "testUnlockWithCode failed with invalid code"
+		sendEvent(name:"UserInput", value: "Failed", descriptionText: "Code input Failed for ${btn} ("+state.code+")", displayed: true)
+		if (logEnable) log.debug "${btn} code NOT accepted"	
+		state.notifyCount = state.notifyCount + 1
+		if(state.notify && state.notifyCount.toInteger() >= state.notifyLimit.toInteger()){
+			parent.notify("Keypad code input Failed triggered by ${btn} ("+state.code+")")
+			state.notifyCount = 0
+		}
     }
-
-	if(codeAccepted == false){
-		sendEvent(name:"UserInput", value: "Failed", descriptionText: "Code input Failed ("+state.code+")", displayed: true)
-		if (logEnable) log.debug "${btn} code NOT accepted"
-	}
-
 	return codeAccepted
 }
 
@@ -196,7 +207,6 @@ def clearCode(){
 
 def buttonPress(btn) {
 	unschedule(clearCode)
-	if (logEnable) log.debug btn
 
 	if(btn=="Clear"){
 		clearCode()
@@ -205,7 +215,7 @@ def buttonPress(btn) {
 
 	if(btn.isNumber()){
 		state.code = state.code+""+btn
-		if(state.codeInput == "Enter Code"){
+		if(!state.codeInput.contains("*")){
 			state.codeInput = "*"
 		} else {
 			state.codeInput = state.codeInput+"*"
@@ -267,6 +277,7 @@ def createChildren(){
 									completedSetup: true, 
 									label: "${device.displayName} (${it})", 
 									isComponent: true, 
+									name: "${device.displayName} (${it})",
 									componentName: "${it}", 
 									componentLabel: "${it}"
 								]
@@ -300,6 +311,7 @@ def createChildren(){
 									completedSetup: true, 
 									label: "${device.displayName} (${it})", 
 									isComponent: true, 
+									name: "${device.displayName} (${it})",
 									componentName: "${it}", 
 									componentLabel: "${it}"
 								]
@@ -315,7 +327,41 @@ def createChildren(){
 		} else {
 			if (logEnable) log.debug "createChildDevice: Child Device '${device.displayName} (${it})' found! Skipping"
 		}
-	}	
+	}
+	
+	// create iFrame
+	['iFrame'].each {
+		foundChildDevice = null
+		foundChildDevice = getChildDevice("${device.deviceNetworkId}-${it}")
+	
+		if(foundChildDevice=="" || foundChildDevice==null){
+	
+			if (logEnable) log.debug "createChildDevice:  Creating Child Device '${device.displayName} (${it})'"
+			try {
+				def deviceHandlerName = "Virtual Keypad iFrame Child"
+				addChildDevice(deviceHandlerName,
+								"${device.deviceNetworkId}-${it}",
+								[
+									completedSetup: true, 
+									label: "${device.displayName} (${it})", 
+									isComponent: true, 
+									name: "${device.displayName} (${it})",
+									componentName: "${it}", 
+									componentLabel: "${it}"
+								]
+							)
+				sendEvent(name:"Details", value:"Child device created!  May take some time to display.")
+				unschedule(clearDetails)
+				runIn(300,clearDetails)
+			}
+			catch (e) {
+				log.error "Child device creation failed with error = ${e}"
+				sendEvent(name:"Details", value:"Child device creation failed. Please make sure that the '${deviceHandlerName}' is installed and published.", displayed: true)
+			}
+		} else {
+			if (logEnable) log.debug "createChildDevice: Child Device '${device.displayName} (${it})' found! Skipping"
+		}
+	}
 }
 
 def removeChildren(){

@@ -74,6 +74,11 @@ def setMode(mode){
 	}
 }
 
+def notify(text){
+	notifyDevices.each{
+		it.deviceNotification(text)
+	}
+}
 
 preferences {
     page(name: "pageConfig")
@@ -146,6 +151,18 @@ def pageConfig() {
 			section(getFormat("header-green", "Virtual Keypad Lock Codes")) {
 				paragraph "Set lock codes in the keypad device or using an app like Lock Code Manager"
 			}
+			
+			section(getFormat("header-green", "Notifications on Bad Code Entry")) {
+				input "notify", "bool", required: false, defaultValue: false, submitOnChange: true,
+					title: "Notify you if a bad code has been entered. Default: Off/false"
+				if (notify){
+					input "notifyDevices", "capability.notification", required: notify, multiple: true,
+						title: "Choose your notification devices"
+						
+					input "notifyLimit", "number", required: notify, defaultValue: 1,
+						title: "Send notification after this many bad codes"					
+				}
+			}			
 
 		}
 		
