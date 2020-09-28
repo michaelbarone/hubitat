@@ -68,6 +68,9 @@ def configureSettings(settings){
 				state.notifyLimit = it.value
 				break			
 				
+			case "noCodeRequired":
+				state.noCodeRequired = it.value
+				break
 		}
 	}
 	createChildren()
@@ -145,6 +148,7 @@ def commandCustom(action,btn){
 	def displayDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
 	if(checkInputCode(btn)){
 		if(action=="ReArm"){
+			// this should run the custom-disarm.on()
 			sendLocationEvent(name: "hsmSetArm", value: "disarm", descriptionText: "Keypad Event ${action}")
 		}
 
@@ -176,7 +180,15 @@ def checkInputCode(btn){
 	if (logEnable) log.debug "checkInputCode"
 	
 	def codeAccepted = false
-
+	
+	if(state.noCodeRequired.any{btn.contains(it)}) {
+		codeAccepted = true
+		sendEvent(name:"UserInput", value: "Success", descriptionText: "No code was required to execute " + btn, displayed: true)
+		if (logEnable) log.debug "${btn} executed with no entered code"
+		return codeAccepted
+	}
+	
+	
     Object lockCode = lockCodes.find{ it.value.code.toInteger() == state.code.toInteger() }
     if (lockCode){
         Map data = ["${lockCode.key}":lockCode.value]

@@ -86,7 +86,15 @@ preferences {
 
 def pageConfig() {
     dynamicPage(name: "", title: "", install: true, uninstall: true) {
-		display() 
+		display()
+
+		def theModes = location.modes.clone()
+		theModes = theModes.collect { "Mode-$it" }
+		def HSM = ["armAway", "armHome", "armNight", "disarm", "armRules", "disarmRules", "disarmAll", "armAll", "cancelAlerts"]
+		HSM = HSM.collect { "HSM-$it" }
+		theModes.addAll(HSM)
+		theModes.addAll(["Custom-Arm","Custom-ReArm","Custom-Disarm"])
+		
         section("<b>Instructions:</b>", hideable: true, hidden: true) {
 			paragraph "<b>Notes:</b>"
     		paragraph "Create a custom keypad!"
@@ -110,18 +118,15 @@ def pageConfig() {
 					input "armDelaySeconds", "number", required: armDelay, range: "10..90", defaultValue: 30,
 						title: "Number of seconds before HSM arm commands are executed. Default: 30, range 10-90"
 
-
-					def theModes = location.modes.clone()
-					theModes = theModes.collect { "Mode-$it" }
-					def HSM = ["armAway", "armHome", "armNight", "disarm", "armRules", "disarmRules", "disarmAll", "armAll", "cancelAlerts"]
-					HSM = HSM.collect { "HSM-$it" }
-					theModes.addAll(HSM)
-					theModes.addAll(["Custom-Arm","Custom-ReArm"])
-
-
 					input "armDelaySecondsGroup", "enum", required: armDelay, multiple: true, options: theModes,
 						title: "What functions do you want to delay before executing?"
-				}				
+				}
+				
+				paragraph ""
+				paragraph "Select Devices you do NOT require a code to execute"
+				input "noCodeRequired", "enum", required: false, multiple: true, options: theModes,
+					title: "These devices need NO code to execute"
+				
 			}
 			
 			section(getFormat("header-green", "Virtual Keypad External Triggers")) {
