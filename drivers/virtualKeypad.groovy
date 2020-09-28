@@ -242,39 +242,6 @@ def buttonPress(btn) {
 def createChildren(){
     if (logEnable) log.debug "Creating Child Devices"
 	
-	/*
-	// create number button device
-	def foundChildDevice = null
-	foundChildDevice = getChildDevice("${device.deviceNetworkId}-Number")
-
-	if(foundChildDevice=="" || foundChildDevice==null){
-
-		if (logEnable) log.debug "createChildDevice:  Creating Child Device '${device.displayName} (Number)'"
-		try {
-			def deviceHandlerName = "Virtual Keypad Number Button Child"
-			addChildDevice(deviceHandlerName,
-							"${device.deviceNetworkId}-Number",
-							[
-								completedSetup: true, 
-								label: "${device.displayName} (Number)", 
-								isComponent: true, 
-								componentName: Number, 
-								componentLabel: Number
-							]
-						)
-			sendEvent(name:"Details", value:"Child device created!  May take some time to display.")
-			unschedule(clearDetails)
-			runIn(300,clearDetails)
-		}
-		catch (e) {
-			log.error "Child device creation failed with error = ${e}"
-			sendEvent(name:"Details", value:"Child device creation failed. Please make sure that the '${deviceHandlerName}' is installed and published.", displayed: true)
-		}
-	} else {
-		if (logEnable) log.debug "createChildDevice: Child Device '${device.displayName} (Number)' found! Skipping"
-	}
-	*/
-	
 	// create buttons
 	def theCommands = location.modes.clone()
 	theCommands = theCommands.collect { "Mode-$it" }
