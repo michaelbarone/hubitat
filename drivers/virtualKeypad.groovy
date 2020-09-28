@@ -96,70 +96,79 @@ def updated() {
 }
 
 def commandMode(action,btn){
+	def displayDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
 	if(checkInputCode(btn)){
 		if(state.armDelay && state.armDelaySecondsGroup.any{btn.contains(it)}){
-			def childDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
 			def timeLeft = state.armDelaySeconds
 			state.armDelaySeconds.times{
 				timeLeft = timeLeft - 1
-				childDevice?.updateInputDisplay("Setting ${action} in ${timeLeft} seconds")
+				displayDevice?.updateInputDisplay("Setting ${action} in ${timeLeft} seconds")
 				pauseExecution(1000)
 			}
 		}
 		if(state.changeModes){
 			parent.setMode(action)
 		}
-		def childDevice = getChildDevice("${device.deviceNetworkId}-${btn}")
-		childDevice?.on()
+		displayDevice?.updateInputDisplay("Success.  Executing ${action}")
+		def commandChildDevice = getChildDevice("${device.deviceNetworkId}-${btn}")
+		commandChildDevice?.on()
+	} else {
+		displayDevice?.updateInputDisplay("Input Denied")
 	}
-	unschedule(clearCode)
-	clearCode()	
+	timeoutClearCode()
 }
 
 def commandHSM(action,btn){
+	def displayDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
 	if(checkInputCode(btn)){
 		if(state.armDelay && state.armDelaySecondsGroup.any{btn.contains(it)}){
-			def childDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
 			def timeLeft = state.armDelaySeconds
 			state.armDelaySeconds.times{
 				timeLeft = timeLeft - 1
-				childDevice?.updateInputDisplay("Setting ${action} in ${timeLeft} seconds")
+				displayDevice?.updateInputDisplay("Setting ${action} in ${timeLeft} seconds")
 				pauseExecution(1000)
 			}
 		}
 		if(state.changeModes){
 			sendLocationEvent(name: "hsmSetArm", value: action, descriptionText: "Keypad Event ${action}")
 		}
-		def childDevice = getChildDevice("${device.deviceNetworkId}-${btn}")
-		childDevice?.on()
+		displayDevice?.updateInputDisplay("Success.  Executing ${action}")
+		def commandChildDevice = getChildDevice("${device.deviceNetworkId}-${btn}")
+		commandChildDevice?.on()
+	} else {
+		displayDevice?.updateInputDisplay("Input Denied")
 	}
-	unschedule(clearCode)
-	clearCode()	
+	timeoutClearCode()
 }
 
 def commandCustom(action,btn){
+	def displayDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
 	if(checkInputCode(btn)){
 		if(action=="ReArm"){
 			sendLocationEvent(name: "hsmSetArm", value: "disarm", descriptionText: "Keypad Event ${action}")
 		}
 
 		if(state.armDelay && state.armDelaySecondsGroup.any{btn.contains(it)}){
-			def childDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
 			def timeLeft = state.armDelaySeconds
 			state.armDelaySeconds.times{
 				timeLeft = timeLeft -  1
-				childDevice?.updateInputDisplay("Setting ${action} in ${timeLeft} seconds")
+				displayDevice?.updateInputDisplay("Setting ${action} in ${timeLeft} seconds")
 				pauseExecution(1000)
 			}
 		}
-		def childDevice = getChildDevice("${device.deviceNetworkId}-${btn}")
-		childDevice?.on()
+		displayDevice?.updateInputDisplay("Success.  Executing ${action}")
+		def commandChildDevice = getChildDevice("${device.deviceNetworkId}-${btn}")
+		commandChildDevice?.on()
+	} else {
+		displayDevice?.updateInputDisplay("Input Denied")
 	}
-	unschedule(clearCode)
-	clearCode()
+	timeoutClearCode()
 }
 
-
+def timeoutClearCode(){
+	unschedule(clearCode)
+	runIn(5,clearCode)
+}
 
 
 
@@ -178,7 +187,7 @@ def checkInputCode(btn){
         //sendEvent(name:"lastCodeName", value: lockCode.value.name, descriptionText: descriptionText, isStateChange: true)
 		sendEvent(name:"UserInput", value: "Success", descriptionText: descriptionText + " " + btn, displayed: true)
 		codeAccepted = true
-		if (logEnable) log.debug "${btn} code accepted"	
+		if (logEnable) log.debug "${btn} code accepted"
 		state.notifyCount = 0		
     } else {
 		sendEvent(name:"UserInput", value: "Failed", descriptionText: "Code input Failed for ${btn} ("+state.code+")", displayed: true)
