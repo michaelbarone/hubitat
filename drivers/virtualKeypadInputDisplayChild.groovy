@@ -19,12 +19,12 @@
  */
 metadata {
 	definition (name: "Virtual Keypad Input Display Child", namespace: "mbarone", author: "mbarone", importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/virtualKeypadInputDisplayChild.groovy") {
+		capability "Notification"
 	}
 
     preferences {
         input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: true
 	}
-	
 	attribute "InputDisplay","string"
 }
 
@@ -44,4 +44,8 @@ def updated() {
 
 def updateInputDisplay(text){
 	sendEvent(name: "InputDisplay", value: text, displayed: false)
+}
+
+def deviceNotification(text) {
+	/* empty command so this device is avilable for use on dashboards */
 }
