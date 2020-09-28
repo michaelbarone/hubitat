@@ -1,0 +1,57 @@
+{
+  "packageName": "Virtual Keypad",
+  "author": "mbarone",
+  "version": "1.0.0",
+  "minimumHEVersion": "2.1.9",
+  "dateReleased": "2020-09-28",
+  "apps": [
+    {
+      "id": "e41757e7-0cf8-4fbd-bdb8-07f63b9ac51a",
+      "name": "Virtual Keypad Manager",
+      "namespace": "mbarone",
+      "location": "https://raw.githubusercontent.com/michaelbarone/hubitat/master/apps/virtualKeypadManager.groovy",
+      "required": true,
+      "oauth": false,
+      "primary": false
+    },
+    {
+      "id": "4d4ce607-b972-419c-82de-42e51a9d8780",
+      "name": "Virtual Keypad Child",
+      "namespace": "mbarone",
+      "location": "https://raw.githubusercontent.com/michaelbarone/hubitat/master/apps/virtualKeypadChild.groovy",
+      "required": true,
+      "oauth": false,
+      "primary": false
+    }
+  ],
+  "drivers": [
+    {
+      "id": "a0034350-993d-4483-b848-e7d8ebd061b3",
+      "name": "Virtual Keypad",
+      "namespace": "mbarone",
+      "location": "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/virtualKeypad.groovy",
+      "required": true
+    },
+    {
+      "id": "5e8e5e99-e031-477f-a158-0626eec1eb9a",
+      "name": "Virtual Keypad Button Child",
+      "namespace": "mbarone",
+      "location": "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/virtualKeypadButtonChild.groovy",
+      "required": true
+    },
+    {
+      "id": "d4df3b8a-ca27-40da-98a1-db0d214aa932",
+      "name": "Virtual Keypad Input Display Child",
+      "namespace": "mbarone",
+      "location": "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/virtualKeypadInputDisplayChild.groovy",
+      "required": true
+    },
+    {
+      "id": "6a1fb27c-fa78-4d7c-b0c4-ff7b42f10950",
+      "name": "Virtual Keypad iFrame Child",
+      "namespace": "mbarone",
+      "location": "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/virtualKeypadiFrameChild.groovy",
+      "required": true
+    }
+  ]
+}
