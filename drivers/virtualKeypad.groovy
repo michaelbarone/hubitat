@@ -222,9 +222,12 @@ def checkInputCode(btn){
 		sendEvent(name:"UserInput", value: "Failed", descriptionText: "Code input Failed for ${btn} ("+state.code+")", displayed: true)
 		if (logEnable) log.debug "${btn} code NOT accepted"	
 		state.notifyCount = state.notifyCount + 1
+		unschedule(clearNotifyCount)
+		runIn(60,clearNotifyCount)
 		if(state.notify && state.notifyCount.toInteger() >= state.notifyLimit.toInteger()){
 			parent.notify("Keypad code input Failed triggered by ${btn} ("+state.code+")")
 			state.notifyCount = 0
+			unschedule(clearNotifyCount)
 		}
     }
 	return codeAccepted
@@ -232,6 +235,10 @@ def checkInputCode(btn){
 
 def clearDetails(){
 	sendEvent(name:"Details", value:"Running Normally.")
+}
+
+def clearNotifyCount(){
+	state.notifyCount = 0
 }
 
 def clearCode(){

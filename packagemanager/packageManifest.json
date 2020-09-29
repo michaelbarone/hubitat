@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "minimumHEVersion": "2.1.9",
   "dateReleased": "2020-09-28",
-  "communityLink": "link.to.forum.thread",
+  "communityLink": "https://community.hubitat.com/t/release-virtual-keypad/51825",
   "releaseNotes": "These are the changes in this version. Please look at the community thread.",  
   "apps": [
     {
