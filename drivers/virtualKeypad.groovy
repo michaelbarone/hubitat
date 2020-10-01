@@ -16,6 +16,7 @@
  *    Date        Who            What
  *    ----        ---            ----
  * 	 9-26-20	mbarone			initial release 
+ * 	 10-01-20	mbarone			can start inputting new code immediately after bad code response without waiting for the 5 second reset 
  */
 
 import groovy.json.JsonSlurper
@@ -94,6 +95,7 @@ def logsOff(){
 
 def installed() {
 	clearCode()
+	resetInputDisplay()
     updated()
     sendEvent(name:"maxCodes",value:20)
     sendEvent(name:"codeLength",value:4)
@@ -188,7 +190,9 @@ def commandCustom(action,btn){
 
 def timeoutClearCode(){
 	unschedule(clearCode)
-	runIn(5,clearCode)
+	clearCode()
+	unschedule(resetInputDisplay)
+	runIn(5,resetInputDisplay)	
 }
 
 
@@ -245,16 +249,22 @@ def clearCode(){
 	if (logEnable) log.debug "clearCode"
 	state.code = ""
 	state.codeInput = "Enter Code"
+}
+
+def resetInputDisplay(){
+	if (logEnable) log.debug "resetInputDisplay"
 	def childDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
-	childDevice?.updateInputDisplay(state.codeInput)	
+	childDevice?.updateInputDisplay(state.codeInput)
 }
 
 
 def buttonPress(btn) {
 	unschedule(clearCode)
+	unschedule(resetInputDisplay)
 
 	if(btn=="Clear"){
 		clearCode()
+		resetInputDisplay()
 		return
 	}
 
@@ -269,6 +279,8 @@ def buttonPress(btn) {
 		childDevice?.updateInputDisplay(state.codeInput)
 		unschedule(clearCode)
 		runIn(30,clearCode)
+		unschedule(resetInputDisplay)
+		runIn(30,resetInputDisplay)
 		return
 	}
 
