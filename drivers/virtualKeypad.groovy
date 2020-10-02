@@ -232,11 +232,11 @@ def checkInputCode(btn){
     Object lockCode = lockCodes.find{ it.value.code.toInteger() == state.code.toInteger() }
     if (lockCode){
         Map data = ["${lockCode.key}":lockCode.value]
-        String descriptionText = "${device.displayName} was unlocked by ${lockCode.value.name}"
+        String descriptionText = "${device.displayName} executed ${btn} by ${lockCode.value.name}"
         if (txtEnable) log.info "${descriptionText}"
         //if (optEncrypt) data = encrypt(JsonOutput.toJson(data))
         //sendEvent(name:"lock",value:"unlocked",descriptionText: descriptionText, type:"physical",data:data, isStateChange: true)
-        //sendEvent(name:"lastCodeName", value: lockCode.value.name, descriptionText: descriptionText, isStateChange: true)
+        sendEvent(name:"lastCodeName", value: lockCode.value.name, descriptionText: descriptionText, isStateChange: true, displayed: true)
 		sendEvent(name:"UserInput", value: "Success", descriptionText: descriptionText + " " + btn, displayed: true)
 		codeAccepted = true
 		if (logEnable) log.debug "${btn} code accepted"
@@ -283,7 +283,9 @@ def panicAlarm(){
 	if(state.panicPressCount<2){
 		getChildDevice("${device.deviceNetworkId}-InputDisplay")?.updateInputDisplay("Press Panic Again to Trigger")
 	} else {
-		getChildDevice("${device.deviceNetworkId}-Panic")?.tamperAlert()
+		def panicDevice = getChildDevice("${device.deviceNetworkId}-Panic")
+		panicDevice?.tamperAlert()
+		panicDevice?.on()
 		getChildDevice("${device.deviceNetworkId}-InputDisplay")?.updateInputDisplay("Panic Alarm Triggered")
 		state.panicPressCount = 0
 	}

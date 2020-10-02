@@ -1,7 +1,7 @@
 {
   "packageName": "Virtual Keypad",
   "author": "mbarone",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "minimumHEVersion": "2.1.9",
   "dateReleased": "2020-09-28",
   "communityLink": "https://community.hubitat.com/t/release-virtual-keypad/51825",
