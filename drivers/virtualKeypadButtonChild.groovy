@@ -16,6 +16,7 @@
  *    Date        Who            What
  *    ----        ---            ----
  * 	 9-26-20	mbarone			initial release
+ * 	 10-01-20	mbarone			added panic option with tamper trigger
  */
 metadata {
 	definition (name: "Virtual Keypad Button Child", namespace: "mbarone", author: "mbarone", importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/virtualKeypadButtonChild.groovy") {
@@ -23,6 +24,7 @@ metadata {
 		capability "Momentary"
 		capability "Actuator"
 		capability "Switch"
+		capability "TamperAlert"
 	}
 
     preferences {
@@ -52,6 +54,9 @@ def push(evt) {
 	if(btn == "Clear"){
 		sendEvent(name: "pushed", value: "1", isStateChange  : true)
 		parent.buttonPress("${btn}")
+	} else if(btn == "Panic"){
+		sendEvent(name: "pushed", value: "1", isStateChange  : true)
+		parent.buttonPress("${btn}")
 	} else if(btn == "Number"){
 		sendEvent(name: "pushed", value: evt, isStateChange  : true)
 		parent.buttonPress("${evt}")		
@@ -71,4 +76,15 @@ def on() {
 def off() {
 	if (logEnable) log.debug "off() called"
 	sendEvent(name: "switch", value: "off")
+}
+
+def tamperAlert(){
+	if (logEnable) log.debug "tamperAlert() called"
+	sendEvent(name: "tamper", value: "detected", isStateChange  : true)
+	runIn(5,clearTamperAlert)
+}
+
+def clearTamperAlert(){
+	if (logEnable) log.debug "clearTamperAlert() called"
+	sendEvent(name: "tamper", value: "clear", isStateChange  : true)
 }

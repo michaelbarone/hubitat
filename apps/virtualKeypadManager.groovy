@@ -15,12 +15,13 @@
  *
  *    Date        Who            What
  *    ----        ---            ----
- * 
+ * 	 9-26-20	mbarone			initial release 
+ * 	 10-01-20	mbarone			added panic button
  */
 
  def setVersion(){
     state.name = "Virtual Keypad Manager"
-	state.version = "0.0.1"
+	state.version = "0.0.2"
 }
  
  

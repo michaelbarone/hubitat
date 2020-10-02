@@ -17,6 +17,7 @@
  *    ----        ---            ----
  * 	 9-26-20	mbarone			initial release 
  * 	 10-01-20	mbarone			can start inputting new code immediately after bad code response without waiting for the 5 second reset 
+ * 	 10-01-20	mbarone			added Panic button integration
  */
 
 import groovy.json.JsonSlurper
@@ -42,6 +43,8 @@ def configureSettings(settings){
 	state.noCodeRequired = ["none"]
 	state.defaultMode = ""
 	state.defaultModeTrigger = ["none"]
+	state.panicPressCount = 0
+	state.notifyCount = 0	
 	settings.each{
 		switch(it.key){
 			case "armDelay":
@@ -82,7 +85,11 @@ def configureSettings(settings){
 
 			case "defaultModeTrigger":
 				state.defaultModeTrigger = it.value
-				break				
+				break	
+
+			case "cancelAlertsOnDisarm":
+				state.cancelAlertsOnDisarm = it.value
+				break
 		}
 	}
 	createChildren()
@@ -100,6 +107,7 @@ def installed() {
     sendEvent(name:"maxCodes",value:20)
     sendEvent(name:"codeLength",value:4)
 	state.notifyCount = 0
+	state.panicPressCount = 0
 }
 
 def updated() {
@@ -114,9 +122,14 @@ def updated() {
 def commandMode(action,btn){
 	def displayDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
 	if(checkInputCode(btn)){
+		// set default mode if set
 		if(state.defaultMode != "" && state.defaultModeTrigger.any{btn.contains(it)}){
 			parent.setMode(state.defaultMode)
 		}
+		// cancel HSM alerts if set and mode has disarm in name
+		if(state.cancelAlertsOnDisarm == true && btn.toLowerCase().contains("disarm")){
+			cancelHSMAlerts()
+		}		
 		if(state.armDelay && state.armDelaySecondsGroup.any{btn.contains(it)}){
 			def timeLeft = state.armDelaySeconds
 			state.armDelaySeconds.times{
@@ -140,6 +153,10 @@ def commandMode(action,btn){
 def commandHSM(action,btn){
 	def displayDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
 	if(checkInputCode(btn)){
+		// cancel HSM alerts if set and mode has disarm in name
+		if(state.cancelAlertsOnDisarm == true && btn.toLowerCase().contains("disarm")){
+			cancelHSMAlerts()
+		}	
 		if(state.armDelay && state.armDelaySecondsGroup.any{btn.contains(it)}){
 			def timeLeft = state.armDelaySeconds
 			state.armDelaySeconds.times{
@@ -148,7 +165,7 @@ def commandHSM(action,btn){
 				pauseExecution(1000)
 			}
 		}
-		if(state.changeModes){
+		if(state.changeHSM){
 			sendLocationEvent(name: "hsmSetArm", value: action, descriptionText: "Keypad Event ${action}")
 		}
 		displayDevice?.updateInputDisplay("Success.  Executing ${action}")
@@ -163,6 +180,10 @@ def commandHSM(action,btn){
 def commandCustom(action,btn){
 	def displayDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
 	if(checkInputCode(btn)){
+		// cancel HSM alerts if set and mode has disarm in name
+		if(state.cancelAlertsOnDisarm == true && btn.toLowerCase().contains("disarm")){
+			cancelHSMAlerts()
+		}	
 		if(action=="ReArm"){
 			displayDevice?.updateInputDisplay("Success.  Executing Disarm")
 			getChildDevice("${device.deviceNetworkId}-Custom-Disarm")?.on()
@@ -194,8 +215,6 @@ def timeoutClearCode(){
 	unschedule(resetInputDisplay)
 	runIn(5,resetInputDisplay)	
 }
-
-
 
 def checkInputCode(btn){
 	if (logEnable) log.debug "checkInputCode"
@@ -247,24 +266,57 @@ def clearNotifyCount(){
 
 def clearCode(){
 	if (logEnable) log.debug "clearCode"
+	state.panicPressCount = 0
 	state.code = ""
 	state.codeInput = "Enter Code"
 }
 
 def resetInputDisplay(){
 	if (logEnable) log.debug "resetInputDisplay"
-	def childDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
-	childDevice?.updateInputDisplay(state.codeInput)
+	def displayDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
+	displayDevice?.updateInputDisplay(state.codeInput)
 }
 
+def panicAlarm(){
+	state.panicPressCount = state.panicPressCount + 1
+	if (logEnable) log.debug "panicAlarm press "+ state.panicPressCount
+	if(state.panicPressCount<2){
+		getChildDevice("${device.deviceNetworkId}-InputDisplay")?.updateInputDisplay("Press Panic Again to Trigger")
+	} else {
+		getChildDevice("${device.deviceNetworkId}-Panic")?.tamperAlert()
+		getChildDevice("${device.deviceNetworkId}-InputDisplay")?.updateInputDisplay("Panic Alarm Triggered")
+		state.panicPressCount = 0
+	}
+	unschedule(clearPanicCount)
+	runIn(5,clearPanicCount)
+}
+
+def clearPanicCount(){
+	if (logEnable) log.debug "clearPanicCount"
+	unschedule(clearCode)
+	clearCode()
+	unschedule(resetInputDisplay)
+	resetInputDisplay()
+}
+
+def cancelHSMAlerts(){
+	if (logEnable) log.debug "cancelHSMAlerts"
+	sendLocationEvent(name: "hsmSetArm", value: "cancelAlerts", descriptionText: "Keypad Event HSM cancelAlerts")
+}
 
 def buttonPress(btn) {
+	unschedule(clearPanicCount)
 	unschedule(clearCode)
 	unschedule(resetInputDisplay)
 
 	if(btn=="Clear"){
 		clearCode()
 		resetInputDisplay()
+		return
+	}
+
+	if(btn=="Panic"){
+		panicAlarm()
 		return
 	}
 
@@ -316,7 +368,7 @@ def createChildren(){
 	def HSM = ["armAway", "armHome", "armNight", "disarm", "armRules", "disarmRules", "disarmAll", "armAll", "cancelAlerts"]
 	HSM = HSM.collect { "HSM-$it" }
 	theCommands.addAll(HSM)
-	theCommands.addAll(["Clear","Custom-Arm","Custom-ReArm","Custom-Disarm","Number"])
+	theCommands.addAll(["Clear","Custom-Arm","Custom-ReArm","Custom-Disarm","Number","Panic"])
 	//log.debug theCommands
 
 	theCommands.each {

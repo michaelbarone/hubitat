@@ -15,12 +15,13 @@
  *
  *    Date        Who            What
  *    ----        ---            ----
- * 
+ * 	 9-26-20	mbarone			initial release 
+ * 	 10-01-20	mbarone			added panic button
  */
  
  def setVersion(){
     state.name = "Virtual Keypad Child"
-	state.version = "0.0.1"
+	state.version = "0.0.2"
 }
 
 definition(
@@ -168,6 +169,10 @@ def pageConfig() {
 					title: "Have the Keypad app change HSM directly. Default: On/true"
 			}
 
+			section(getFormat("header-green", "HSM Cancel Alerts Options")) {
+				input "cancelAlertsOnDisarm", "bool", required: true, defaultValue: true, submitOnChange: true,
+					title: "When 'On', HSM alerts will be cancelled when any of the disarm commands are used. Default: On/true"
+			}
 
 			section(getFormat("header-green", "Virtual Keypad Lock Codes")) {
 				paragraph "Set lock codes in the keypad device or using an app like Lock Code Manager"
