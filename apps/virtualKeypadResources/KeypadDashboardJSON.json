@@ -1,0 +1,213 @@
+{
+  "localization": "English",
+  "roundedCorners": 30,
+  "dateFormat": "MM/DD/YYYY",
+  "hideLabels": true,
+  "customColors": [],
+  "colWidth": "",
+  "cloudRefresh": 5,
+  "hsmPin": "",
+  "hide3dot": true,
+  "clockMode": true,
+  "gridGap": 8,
+  "tiles": [
+    {
+      "rowSpan": 1,
+      "template": "buttons",
+      "col": 2,
+      "colSpan": 1,
+      "id": 0,
+      "row": 5,
+      "device": "478",
+      "templateExtra": "0"
+    },
+    {
+      "rowSpan": 1,
+      "template": "buttons",
+      "col": 1,
+      "colSpan": 1,
+      "id": 1,
+      "row": 2,
+      "device": "478",
+      "templateExtra": "1"
+    },
+    {
+      "rowSpan": 1,
+      "template": "buttons",
+      "col": 2,
+      "colSpan": 1,
+      "id": 2,
+      "row": 2,
+      "device": "478",
+      "templateExtra": "2"
+    },
+    {
+      "rowSpan": 1,
+      "template": "buttons",
+      "col": 3,
+      "colSpan": 1,
+      "id": 3,
+      "row": 2,
+      "device": "478",
+      "templateExtra": "3"
+    },
+    {
+      "rowSpan": 1,
+      "template": "buttons",
+      "col": 1,
+      "colSpan": 1,
+      "id": 4,
+      "row": 3,
+      "device": "478",
+      "templateExtra": "4"
+    },
+    {
+      "rowSpan": 1,
+      "template": "buttons",
+      "col": 2,
+      "colSpan": 1,
+      "id": 5,
+      "row": 3,
+      "device": "478",
+      "templateExtra": "5"
+    },
+    {
+      "rowSpan": 1,
+      "template": "buttons",
+      "col": 3,
+      "colSpan": 1,
+      "id": 6,
+      "row": 3,
+      "device": "478",
+      "templateExtra": "6"
+    },
+    {
+      "rowSpan": 1,
+      "template": "buttons",
+      "col": 1,
+      "colSpan": 1,
+      "id": 7,
+      "row": 4,
+      "device": "478",
+      "templateExtra": "7"
+    },
+    {
+      "rowSpan": 1,
+      "template": "buttons",
+      "col": 2,
+      "colSpan": 1,
+      "id": 8,
+      "row": 4,
+      "device": "478",
+      "templateExtra": "8"
+    },
+    {
+      "rowSpan": 1,
+      "template": "buttons",
+      "col": 3,
+      "colSpan": 1,
+      "id": 9,
+      "row": 4,
+      "device": "478",
+      "templateExtra": "9"
+    },
+    {
+      "rowSpan": 1,
+      "template": "buttons",
+      "col": 1,
+      "colSpan": 1,
+      "id": 10,
+      "row": 5,
+      "device": "474",
+      "templateExtra": null,
+      "customIcon": "refresh"
+    },
+    {
+      "rowSpan": 1,
+      "template": "attribute",
+      "col": 1,
+      "colSpan": 3,
+      "id": 11,
+      "row": 1,
+      "device": "479",
+      "templateExtra": "InputDisplay"
+    },
+    {
+      "rowSpan": 1,
+      "template": "buttons",
+      "col": 4,
+      "colSpan": 2,
+      "id": 12,
+      "row": 1,
+      "device": "461",
+      "templateExtra": "1"
+    },
+    {
+      "rowSpan": 1,
+      "template": "buttons",
+      "col": 4,
+      "colSpan": 2,
+      "id": 13,
+      "row": 2,
+      "device": "464",
+      "templateExtra": "1"
+    },
+    {
+      "rowSpan": 1,
+      "template": "buttons",
+      "col": 4,
+      "colSpan": 2,
+      "id": 14,
+      "row": 3,
+      "device": "476",
+      "templateExtra": "1"
+    },
+    {
+      "rowSpan": 1,
+      "template": "buttons",
+      "col": 4,
+      "colSpan": 2,
+      "id": 15,
+      "row": 4,
+      "device": "475",
+      "templateExtra": "1"
+    },
+    {
+      "rowSpan": 1,
+      "template": "buttons",
+      "col": 4,
+      "colSpan": 2,
+      "id": 16,
+      "row": 5,
+      "device": "477",
+      "templateExtra": "1"
+    },
+    {
+      "rowSpan": 1,
+      "template": "buttons",
+      "col": 3,
+      "colSpan": 1,
+      "id": 17,
+      "row": 5,
+      "device": "528",
+      "templateExtra": "1",
+      "customIcon": "he-siren_and_alarm"
+    }
+  ],
+  "goBack": true,
+  "modePin": "",
+  "bgColor": "Black",
+  "lanRefresh": 2,
+  "iconSize": 42,
+  "cols": 5,
+  "rowHeight": "",
+  "customCSS": ".header.flex {\n    padding:0 !important;\n}\n\n.wrapper {\n    overflow: hidden;\n    padding-right: 15px;\n}\n\n.dashBack.flex, .dashName.flex {\n    display:none;\n}\n\n.he-tap:before {\n    content: none;\n}\n\n.tile.button .tile-title, .tile.attribute .tile-title {\n    visibility: hidden;\n    display: none;\n}\n\n.tile.button .tile-contents, .tile.attribute .tile-contents {\n    height: calc(100%);\n}\n\n.tile.attribute .tile-primary, .tile.button .tile-primary {\n    padding:0;\n}\n\n#tile-1 .tile-primary :before {\n    content: \"1\";\n}\n\n#tile-2 .tile-primary :before {\n    content: \"2\";\n}\n\n#tile-3 .tile-primary :before {\n    content: \"3\";\n}\n\n#tile-4 .tile-primary :before {\n    content: \"4\";\n}\n\n#tile-5 .tile-primary :before {\n    content: \"5\";\n}\n\n#tile-6 .tile-primary :before {\n    content: \"6\";\n}\n\n#tile-7 .tile-primary :before {\n    content: \"7\";\n}\n\n#tile-8 .tile-primary :before {\n    content: \"8\";\n}\n\n#tile-9 .tile-primary :before {\n    content: \"9\";\n}\n\n#tile-0 .tile-primary :before {\n    content: \"0\";\n}\n\n#tile-10 .tile-primary :before {\n    #content: \"Clear\";\n}\n\n#tile-14 .tile-primary :before {\n    content: \"Re-Arm\";\n}\n\n#tile-15 .tile-primary :before {\n    content: \"Arm\";\n}\n\n#tile-16 .tile-primary :before {\n    content: \"Disarm\";\n}\n\n#tile-13 .tile-primary :before {\n    content: \"Away\";\n}\n\n#tile-12 .tile-primary :before {\n    content: \"Party\";\n}",
+  "hideEvents": true,
+  "tempScale": "F",
+  "noColors": false,
+  "readOnly": null,
+  "rows": 5,
+  "hideIconText": true,
+  "name": "kptemplate",
+  "fontSize": 12
+}

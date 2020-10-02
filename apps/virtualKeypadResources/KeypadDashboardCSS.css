@@ -1,0 +1,93 @@
+.header.flex {
+    padding:0 !important;
+}
+
+.wrapper {
+    overflow: hidden;
+    padding-right: 15px;
+}
+
+.dashBack.flex, .dashName.flex {
+    display:none;
+}
+
+.he-tap:before {
+    content: none;
+}
+
+.tile.button .tile-title, .tile.attribute .tile-title {
+    visibility: hidden;
+    display: none;
+}
+
+.tile.button .tile-contents, .tile.attribute .tile-contents {
+    height: calc(100%);
+}
+
+.tile.attribute .tile-primary, .tile.button .tile-primary {
+    padding:0;
+}
+
+#tile-1 .tile-primary :before {
+    content: "1";
+}
+
+#tile-2 .tile-primary :before {
+    content: "2";
+}
+
+#tile-3 .tile-primary :before {
+    content: "3";
+}
+
+#tile-4 .tile-primary :before {
+    content: "4";
+}
+
+#tile-5 .tile-primary :before {
+    content: "5";
+}
+
+#tile-6 .tile-primary :before {
+    content: "6";
+}
+
+#tile-7 .tile-primary :before {
+    content: "7";
+}
+
+#tile-8 .tile-primary :before {
+    content: "8";
+}
+
+#tile-9 .tile-primary :before {
+    content: "9";
+}
+
+#tile-0 .tile-primary :before {
+    content: "0";
+}
+
+#tile-10 .tile-primary :before {
+    #content: "Clear";
+}
+
+#tile-14 .tile-primary :before {
+    content: "Re-Arm";
+}
+
+#tile-15 .tile-primary :before {
+    content: "Arm";
+}
+
+#tile-16 .tile-primary :before {
+    content: "Disarm";
+}
+
+#tile-13 .tile-primary :before {
+    content: "Away";
+}
+
+#tile-12 .tile-primary :before {
+    content: "Party";
+}

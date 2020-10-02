@@ -1,0 +1,11 @@
+/* keypad iframe specific - #tile-25 is the Keypad (iFrame) device */
+#tile-25 .tile-title {
+display:none;
+}
+#tile-25 .tile-contents {
+padding: 0;
+height:100%;
+}
+#tile-25 .tile-primary {
+padding: 0;
+}
