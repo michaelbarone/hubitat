@@ -21,7 +21,7 @@
 
  def setVersion(){
     state.name = "Virtual Keypad Manager"
-	state.version = "0.0.2"
+	state.version = "0.0.4"
 }
  
  

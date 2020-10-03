@@ -21,7 +21,7 @@
  
  def setVersion(){
     state.name = "Virtual Keypad Child"
-	state.version = "0.0.2"
+	state.version = "0.0.4"
 }
 
 definition(
@@ -95,6 +95,8 @@ def pageConfig() {
 		HSM = HSM.collect { "HSM-$it" }
 		theModes.addAll(HSM)
 		theModes.addAll(["Custom-Arm","Custom-ReArm","Custom-Disarm"])
+		def theAdvancedModes = theModes.clone()
+		theAdvancedModes.addAll(["Panic","Cancel"])
 		
         section("<b>Instructions:</b>", hideable: true, hidden: true) {
 			paragraph "<b>Notes:</b>"
@@ -129,6 +131,22 @@ def pageConfig() {
 				input "noCodeRequired", "enum", required: false, multiple: true, options: theModes,
 					title: "These commands need NO code to execute"
 				
+			}
+
+			section(getFormat("header-green", "Advanced Button Control")) {
+				paragraph "If this is enabled, only 1 button child device will be created and you must configure each button as you add it to the dashboard."
+				paragraph "Leave this disabled to have all HSM/Mode/Custom child buttons created automatically"
+
+				input "advancedButtonControl", "bool", required: true, defaultValue: false, submitOnChange: true,
+					title: "Manage your buttons manually, this will only add 1 child button to the keypad. Default: Off/false"				
+				
+				if(advancedButtonControl){
+					paragraph "When adding the command buttons to your dashboard, you will need to specify each button command using the 'Button Number' input in the edit tile dialog."
+					paragraph ""
+					paragraph "The number buttons will need 'Button Number' set to its respective value; Keypad Button 1 will need 'Button Number' set to 1, Keypad Button 5 will need 'Button Number' set to 5, etc"
+					paragraph "The button commands are:"
+					paragraph ""+theAdvancedModes
+				}
 			}
 			
 			section(getFormat("header-green", "Virtual Keypad External Triggers")) {

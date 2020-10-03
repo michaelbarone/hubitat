@@ -32,6 +32,7 @@ metadata {
 	}
 	
 	command "push"
+
 }
 
 def logsOff(){
@@ -49,15 +50,18 @@ def updated() {
 }
 
 def push(evt) {
-	if (logEnable) log.debug "push() called"
 	def btn = device.deviceNetworkId.split("-")[-1]
+	if (logEnable) log.debug "push(${evt}) called using ${btn}"
+	if(evt==null){
+		return
+	}
 	if(btn == "Clear"){
 		sendEvent(name: "pushed", value: "1", isStateChange  : true)
 		parent.buttonPress("${btn}")
 	} else if(btn == "Panic"){
 		sendEvent(name: "pushed", value: "1", isStateChange  : true)
 		parent.buttonPress("${btn}")
-	} else if(btn == "Number"){
+	} else if(btn == "Number" || btn == "Button"){
 		sendEvent(name: "pushed", value: evt, isStateChange  : true)
 		parent.buttonPress("${evt}")		
 	} else {

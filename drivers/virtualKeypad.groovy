@@ -18,6 +18,7 @@
  * 	 9-26-20	mbarone			initial release 
  * 	 10-01-20	mbarone			can start inputting new code immediately after bad code response without waiting for the 5 second reset 
  * 	 10-01-20	mbarone			added Panic button integration
+ * 	 10-03-20	mbarone			added SecurityKeypad capability to help integrate into HSM and other apps that use this feature
  */
 
 import groovy.json.JsonSlurper
@@ -26,6 +27,7 @@ import groovy.json.JsonOutput
 metadata {
 	definition (name: "Virtual Keypad", namespace: "mbarone", author: "mbarone", importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/virtualKeypad.groovy") {
 		capability "Lock Codes"
+		capability "SecurityKeypad"
 	}
 
     preferences {
@@ -89,6 +91,10 @@ def configureSettings(settings){
 
 			case "cancelAlertsOnDisarm":
 				state.cancelAlertsOnDisarm = it.value
+				break
+				
+			case "advancedButtonControl":
+				state.advancedButtonControl = it.value
 				break
 		}
 	}
@@ -227,9 +233,13 @@ def checkInputCode(btn){
 		if (logEnable) log.debug "${btn} executed with no entered code"
 		return codeAccepted
 	}
-	
-	
-    Object lockCode = lockCodes.find{ it.value.code.toInteger() == state.code.toInteger() }
+
+	if(state.code == ""){
+		if (logEnable) log.debug "code is blank, returning false"
+		return codeAccepted
+	}
+
+	Object lockCode = lockCodes.find{ it.value.code.toInteger() == state.code.toInteger() }
     if (lockCode){
         Map data = ["${lockCode.key}":lockCode.value]
         String descriptionText = "${device.displayName} executed ${btn} by ${lockCode.value.name}"
@@ -269,6 +279,7 @@ def clearCode(){
 	state.panicPressCount = 0
 	state.code = ""
 	state.codeInput = "Enter Code"
+	//state.codeInput = "HSM: ${location.hsmStatus} | Mode: ${location.mode} &#13; Enter Code"
 }
 
 def resetInputDisplay(){
@@ -338,6 +349,12 @@ def buttonPress(btn) {
 		return
 	}
 
+	log.debug btn
+	
+	if(btn == null){
+		return
+	}
+
 	def type = btn.split("-")[-2]
 	def action = btn.split("-")[-1]
 	if(type=="Mode"){
@@ -362,8 +379,8 @@ def buttonPress(btn) {
 
 def createChildren(){
     if (logEnable) log.debug "Creating Child Devices"
-	
-	// create buttons
+
+	// create all buttons
 	def theCommands = location.modes.clone()
 	theCommands = theCommands.collect { "Mode-$it" }
 	//log.debug theCommands
@@ -372,37 +389,87 @@ def createChildren(){
 	theCommands.addAll(HSM)
 	theCommands.addAll(["Clear","Custom-Arm","Custom-ReArm","Custom-Disarm","Number","Panic"])
 	//log.debug theCommands
-
-	theCommands.each {
-		foundChildDevice = null
-		foundChildDevice = getChildDevice("${device.deviceNetworkId}-${it}")
 	
-		if(foundChildDevice=="" || foundChildDevice==null){
-	
-			if (logEnable) log.debug "createChildDevice:  Creating Child Device '${device.displayName} (${it})'"
-			try {
-				def deviceHandlerName = "Virtual Keypad Button Child"
-				addChildDevice(deviceHandlerName,
-								"${device.deviceNetworkId}-${it}",
-								[
-									completedSetup: true, 
-									label: "${device.displayName} (${it})", 
-									isComponent: true, 
-									name: "${device.displayName} (${it})",
-									componentName: "${it}", 
-									componentLabel: "${it}"
-								]
-							)
-				sendEvent(name:"Details", value:"Child device created!  May take some time to display.")
-				unschedule(clearDetails)
-				runIn(300,clearDetails)
+	if(state.advancedButtonControl){
+		log.debug "advancedButtonControl"
+		//create limited buttons
+		["Button"].each {
+			foundChildDevice = null
+			foundChildDevice = getChildDevice("${device.deviceNetworkId}-${it}")
+		
+			if(foundChildDevice=="" || foundChildDevice==null){
+		
+				if (logEnable) log.debug "createChildDevice:  Creating Child Device '${device.displayName} (${it})'"
+				try {
+					def deviceHandlerName = "Virtual Keypad Button Child"
+					addChildDevice(deviceHandlerName,
+									"${device.deviceNetworkId}-${it}",
+									[
+										completedSetup: true, 
+										label: "${device.displayName} (${it})", 
+										isComponent: true, 
+										name: "${device.displayName} (${it})",
+										componentName: "${it}", 
+										componentLabel: "${it}"
+									]
+								)
+					sendEvent(name:"Details", value:"Child device created!  May take some time to display.")
+					unschedule(clearDetails)
+					runIn(300,clearDetails)
+				}
+				catch (e) {
+					log.error "Child device creation failed with error = ${e}"
+					sendEvent(name:"Details", value:"Child device creation failed. Please make sure that the '${deviceHandlerName}' is installed and published.", displayed: true)
+				}
+			} else {
+				if (logEnable) log.debug "createChildDevice: Child Device '${device.displayName} (${it})' found! Skipping"
 			}
-			catch (e) {
-				log.error "Child device creation failed with error = ${e}"
-				sendEvent(name:"Details", value:"Child device creation failed. Please make sure that the '${deviceHandlerName}' is installed and published.", displayed: true)
+		}
+		
+		
+		// remove all buttons if previously created
+		theCommands.each {
+			foundChildDevice = null
+			foundChildDevice = getChildDevice("${device.deviceNetworkId}-${it}")
+		
+			if(foundChildDevice!=null){
+				if (logEnable) log.debug "createChildDevice: Unnecessary Child Device '${device.displayName} (${it})' found! Removing!"
+				removeChild("${device.deviceNetworkId}-${it}")
 			}
-		} else {
-			if (logEnable) log.debug "createChildDevice: Child Device '${device.displayName} (${it})' found! Skipping"
+		}
+	} else {
+		// create all buttons
+		theCommands.each {
+			foundChildDevice = null
+			foundChildDevice = getChildDevice("${device.deviceNetworkId}-${it}")
+		
+			if(foundChildDevice=="" || foundChildDevice==null){
+		
+				if (logEnable) log.debug "createChildDevice:  Creating Child Device '${device.displayName} (${it})'"
+				try {
+					def deviceHandlerName = "Virtual Keypad Button Child"
+					addChildDevice(deviceHandlerName,
+									"${device.deviceNetworkId}-${it}",
+									[
+										completedSetup: true, 
+										label: "${device.displayName} (${it})", 
+										isComponent: true, 
+										name: "${device.displayName} (${it})",
+										componentName: "${it}", 
+										componentLabel: "${it}"
+									]
+								)
+					sendEvent(name:"Details", value:"Child device created!  May take some time to display.")
+					unschedule(clearDetails)
+					runIn(300,clearDetails)
+				}
+				catch (e) {
+					log.error "Child device creation failed with error = ${e}"
+					sendEvent(name:"Details", value:"Child device creation failed. Please make sure that the '${deviceHandlerName}' is installed and published.", displayed: true)
+				}
+			} else {
+				if (logEnable) log.debug "createChildDevice: Child Device '${device.displayName} (${it})' found! Skipping"
+			}
 		}
 	}
 	
