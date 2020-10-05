@@ -19,6 +19,7 @@
  * 	 10-01-20	mbarone			can start inputting new code immediately after bad code response without waiting for the 5 second reset 
  * 	 10-01-20	mbarone			added Panic button integration
  * 	 10-03-20	mbarone			added SecurityKeypad capability to help integrate into HSM and other apps that use this feature
+ * 	 10-05-20	mbarone			added lastCodeName attribute so RM could pick up the changes
  */
 
 import groovy.json.JsonSlurper
@@ -26,7 +27,7 @@ import groovy.json.JsonOutput
 
 def setVersion(){
     state.name = "Virtual Keypad"
-	state.version = "0.0.4"
+	state.version = "0.0.5"
 } 
  
 metadata {
