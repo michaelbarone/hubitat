@@ -41,6 +41,7 @@ metadata {
 	}
 
 	attribute "Details","string"
+	attribute "lastCodeName","string"
 
     command "createChildren"
 	command "removeChild", [[name:"deviceNetworkID*",type:"STRING"]]
