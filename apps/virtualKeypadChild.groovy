@@ -133,6 +133,7 @@ def pageConfig() {
 				
 			}
 
+			/*
 			section(getFormat("header-green", "Advanced Button Control")) {
 				paragraph "If this is enabled, only 1 button child device will be created and you must configure each button as you add it to the dashboard."
 				paragraph "Leave this disabled to have all HSM/Mode/Custom child buttons created automatically"
@@ -148,6 +149,7 @@ def pageConfig() {
 					paragraph ""+theAdvancedModes
 				}
 			}
+			*/
 			
 			section(getFormat("header-green", "Virtual Keypad External Triggers")) {
 				paragraph "Each Mode and HSM button that is created also has a switch that can be used to trigger RM or other automations when that button is executed.  These switches will always turn on (and auto off) regardless of the below Mode and HSM options."

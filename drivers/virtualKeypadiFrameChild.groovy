@@ -19,6 +19,11 @@
  */
 
 
+def setVersion(){
+    state.name = "Virtual Keypad iFrame Child"
+	state.version = "0.0.1"
+}
+
 metadata {
     definition (name: "Virtual Keypad iFrame Child", namespace: "mbarone", author: "mbarone", importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/virtualKeypadiFrameChild.groovy") {
         capability "Switch"

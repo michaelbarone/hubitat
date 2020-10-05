@@ -18,6 +18,13 @@
  * 	 9-26-20	mbarone			initial release
  * 	 10-01-20	mbarone			added panic option with tamper trigger
  */
+ 
+def setVersion(){
+    state.name = "Virtual Keypad Button Child"
+	state.version = "0.0.2"
+} 
+ 
+ 
 metadata {
 	definition (name: "Virtual Keypad Button Child", namespace: "mbarone", author: "mbarone", importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/virtualKeypadButtonChild.groovy") {
 		capability "PushableButton"
