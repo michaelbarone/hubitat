@@ -16,14 +16,15 @@
  *    Date        Who            What
  *    ----        ---            ----
  * 	 10-06-20	mbarone			initial release 
- */
+ * 	 10-06-20	mbarone			added attribute Notifcation, which updates with a bad code input message if enabled.  this can be used to trigger a RM notifcation if you watch this attribute for *changed* 
+*/
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 
 def setVersion(){
     state.name = "Virtual Basic Keypad"
-	state.version = "0.0.1"
+	state.version = "0.0.2"
 } 
  
 metadata {
@@ -42,16 +43,17 @@ metadata {
         input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: true
         input name: "cancelAlertsOnDisarm", type: "bool", title: "Cancel Alerts on Disarm", defaultValue: true
 		input name: "src", type: "text", title: "iFrame Url", required: false, description: "paste the direct dashboard url for this keypad's dashboard"
-		//input name: "noCodeRequired", type: "enum", title: "No Code Required", required: false, description: "These HSM commands require no code", multiple: true, options: ["armAway", "armHome", "armNight", "disarm", "armRules", "disarmRules", "disarmAll", "armAll", "cancelAlerts"]
 		input name: "noCodeRequired", type: "text", title: "No Code Required", required: false, description: "These HSM commands require no code.  Separate multiple by comma:  armAway,armHome"
 		input name: "armDelaySeconds", type: "number", title: "Command Delay", required: true, defaultValue: 0, description: "number of seconds before sending command after successful code entry"
 		input name: "armDelaySecondsGroup", type: "text", title: "Commands to Delay", required: false, description: "These HSM commands will be delayed by the set Command Delay.  Separate multiple by comma:  armAway,armHome"
+		input name: "alertOnFailedAttempts", type: "number", title: "Failed Attempts before Notify", required: true, defaultValue: 0, description: "Number of Failed Code entries before the 'Notification' attribute is updated with the failed notice.  0 = disabled"
 	}
 
 	attribute "Details","string"
 	attribute "lastCodeName","string"
 	attribute "InputDisplay","string"
 	attribute "Keypad", "text"
+	attribute "Notification", "text"
 }
 
 def logsOff(){
@@ -74,6 +76,8 @@ def updated() {
 	close()
 	clearDetails()
 	state.armDelaySeconds = armDelaySeconds
+	state.alertOnFailedAttemptsCount = 0
+	sendEvent(name: "Notification", value: "")
 	if(src){
 		sendEvent(name: "Keypad", value: "<div style='height: 100%; width: 100%'><iframe src='${src}' style='height: 100%; width:100%; border: none;'></iframe><div>")
     }
@@ -145,8 +149,18 @@ def checkInputCode(action){
 		sendEvent(name:"UserInput", value: "Success", descriptionText: descriptionText + " " + action, displayed: true)
 		codeAccepted = true
 		if (logEnable) log.debug "${action} code accepted"
-	
+		state.alertOnFailedAttemptsCount = 0
     } else {
+		state.alertOnFailedAttemptsCount = state.alertOnFailedAttemptsCount + 1
+		unschedule(clearAlertOnFailedAttemptsCount)
+		runIn(600,clearAlertOnFailedAttemptsCount)
+		if(alertOnFailedAttempts > 0 && state.alertOnFailedAttemptsCount >= alertOnFailedAttempts){
+			unschedule(clearAlertOnFailedAttemptsCount)
+			state.alertOnFailedAttemptsCount = 0
+			sendEvent(name: "Notification", value: "There have been ${alertOnFailedAttempts} failed code attempts.")
+			unschedule(clearNotification)
+			runIn(10,clearNotification)
+		}
 		sendEvent(name:"UserInput", value: "Failed", descriptionText: "Code input Failed for ${action} ("+state.code+")", displayed: true)
 		if (logEnable) log.debug "${action} code NOT accepted"	
     }
@@ -155,6 +169,14 @@ def checkInputCode(action){
 
 def clearDetails(){
 	sendEvent(name:"Details", value:"Running Normally.")
+}
+
+def clearNotification(){
+	sendEvent(name:"Notification", value:"")
+}
+
+def clearAlertOnFailedAttemptsCount(){
+	state.alertOnFailedAttemptsCount = 0
 }
 
 def clearCode(){
