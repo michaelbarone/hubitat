@@ -25,8 +25,8 @@ import groovy.json.JsonOutput
 def setVersion(){
     state.name = "Virtual Basic Keypad"
 	state.version = "0.0.2"
-} 
- 
+}
+
 metadata {
 	definition (name: "Virtual Basic Keypad", namespace: "mbarone", author: "mbarone", importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/virtualBasicKeypad.groovy") {
 		capability "Lock Codes"

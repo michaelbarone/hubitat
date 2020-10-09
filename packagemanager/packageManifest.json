@@ -1,7 +1,7 @@
 {
   "packageName": "Virtual Keypad",
   "author": "mbarone",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "minimumHEVersion": "2.1.9",
   "dateReleased": "2020-09-28",
   "communityLink": "https://community.hubitat.com/t/release-virtual-keypad/51825",
@@ -46,13 +46,6 @@
       "name": "Virtual Keypad Input Display Child",
       "namespace": "mbarone",
       "location": "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/virtualKeypadInputDisplayChild.groovy",
-      "required": true
-    },
-    {
-      "id": "6a1fb27c-fa78-4d7c-b0c4-ff7b42f10950",
-      "name": "Virtual Keypad iFrame Child",
-      "namespace": "mbarone",
-      "location": "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/virtualKeypadiFrameChild.groovy",
       "required": true
     }
   ]

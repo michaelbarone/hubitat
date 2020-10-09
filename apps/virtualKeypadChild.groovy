@@ -17,11 +17,12 @@
  *    ----        ---            ----
  * 	 9-26-20	mbarone			initial release 
  * 	 10-01-20	mbarone			added panic button
+ * 	 10-08-20	mbarone			command button customization.  choose the command buttons you want child devices created for
  */
  
  def setVersion(){
     state.name = "Virtual Keypad Child"
-	state.version = "0.0.4"
+	state.version = "0.0.5"
 }
 
 definition(
@@ -40,21 +41,27 @@ definition(
 def installed() {
     log.debug "Installed with settings: ${settings}"
 	initialize()
+	updated()
 }
 
-def updated() {	
-    if(logEnable) log.debug "Updated with settings: ${settings}"
+def updated() {
 	unschedule()
     unsubscribe()
 	initialize()
-}
-
-def initialize() {
+	// also defined in pageConfig block
+	app.updateLabel(label)
+	def buttonsCustom = ["Custom-Arm","Custom-ReArm","Custom-Disarm"]
+	def availableButtons = updateButtonOptions(buttonsCustom,buttonsHSMIncluded,buttonsModesIncluded)
+	settings.put("availableButtons",availableButtons)
 	def theChild = getChildDevice(settings.dataName)
 	if(theChild) {
 		if(logEnable) log.debug "Child Keypad Found, applying settings and creating keypad children if needed"
 		theChild.configureSettings(settings)
 	}
+    if(logEnable) log.debug "Updated with settings: ${settings}"
+}
+
+def initialize() {
     setDefaults()
 }
 
@@ -89,67 +96,32 @@ def pageConfig() {
     dynamicPage(name: "", title: "", install: true, uninstall: true) {
 		display()
 
-		def theModes = location.modes.clone()
-		theModes = theModes.collect { "Mode-$it" }
-		def HSM = ["armAway", "armHome", "armNight", "disarm", "armRules", "disarmRules", "disarmAll", "armAll", "cancelAlerts"]
-		HSM = HSM.collect { "HSM-$it" }
-		theModes.addAll(HSM)
-		theModes.addAll(["Custom-Arm","Custom-ReArm","Custom-Disarm"])
-		def theAdvancedModes = theModes.clone()
-		theAdvancedModes.addAll(["Panic","Cancel"])
+		def buttonsModes = location.modes.clone()
+		buttonsModes = buttonsModes.collect { "Mode-$it" }
+		def buttonsHSM = ["armAway", "armHome", "armNight", "disarm", "armRules", "disarmRules", "disarmAll", "armAll", "cancelAlerts"]
+		buttonsHSM = buttonsHSM.collect { "HSM-$it" }
+		// also defined in updated block
+		def buttonsCustom = ["Custom-Arm","Custom-ReArm","Custom-Disarm"]
 		
         section("<b>Instructions:</b>", hideable: true, hidden: true) {
 			paragraph "<b>Notes:</b>"
     		paragraph "Create a custom keypad!"
 		}
-        section(getFormat("header-green", "Virtual Keypad Device Creation")) {
-            paragraph "Do not change the name of the keypad once fully configured"
-		    input "dataName", "text", title: "Enter a name for this vitual Device (ie. 'Keypad - Main' or 'Keypad - Guest')", required:true, submitOnChange:true
- 		    paragraph "<b>A device will automaticaly be created for you as soon as you click outside of this field.</b>"
-		    if(dataName) createKeypadChildDevice()
+		
+		section(getFormat("header-green", "Virtual Keypad Device Creation")) {
+			if(!dataName) {
+				input "dataName", "text", title: "Enter a name for this vitual Device (ie. 'Keypad - Main' or 'Keypad - Guest')", required:true, submitOnChange:true
+				paragraph "<b>A device will automaticaly be created for you as soon as you click outside of this field.</b>"
+			}
+			if(dataName) {
+				def statusMessageD = createKeypadChildDevice()
+			}
 			if(statusMessageD == null) statusMessageD = "Waiting on status message..."
 			paragraph "${statusMessageD}"
-        }
+		}
         
 		if(getChildDevice(dataName)) {
 			def theChildDevice = getChildDevice(dataName)
-			section(getFormat("header-green", "Virtual Keypad Device Settings")) {
-				paragraph "Configure your keypad options"
-				input "armDelay", "bool", required: false, defaultValue: false, submitOnChange: true,
-					title: "Delay before executing button commands. Default: Off/false"
-				if (armDelay){
-					input "armDelaySeconds", "number", required: armDelay, range: "10..90", defaultValue: 30,
-						title: "Number of seconds before button commands are executed. Default: 30, range 10-90"
-
-					input "armDelaySecondsGroup", "enum", required: armDelay, multiple: true, options: theModes,
-						title: "What commands do you want to delay before executing?"
-				}
-				
-				paragraph ""
-				paragraph ""
-				paragraph "Select commands you do NOT require a code to execute:"
-				input "noCodeRequired", "enum", required: false, multiple: true, options: theModes,
-					title: "These commands need NO code to execute"
-				
-			}
-
-			/*
-			section(getFormat("header-green", "Advanced Button Control")) {
-				paragraph "If this is enabled, only 1 button child device will be created and you must configure each button as you add it to the dashboard."
-				paragraph "Leave this disabled to have all HSM/Mode/Custom child buttons created automatically"
-
-				input "advancedButtonControl", "bool", required: true, defaultValue: false, submitOnChange: true,
-					title: "Manage your buttons manually, this will only add 1 child button to the keypad. Default: Off/false"				
-				
-				if(advancedButtonControl){
-					paragraph "When adding the command buttons to your dashboard, you will need to specify each button command using the 'Button Number' input in the edit tile dialog."
-					paragraph ""
-					paragraph "The number buttons will need 'Button Number' set to its respective value; Keypad Button 1 will need 'Button Number' set to 1, Keypad Button 5 will need 'Button Number' set to 5, etc"
-					paragraph "The button commands are:"
-					paragraph ""+theAdvancedModes
-				}
-			}
-			*/
 			
 			section(getFormat("header-green", "Virtual Keypad External Triggers")) {
 				paragraph "Each Mode and HSM button that is created also has a switch that can be used to trigger RM or other automations when that button is executed.  These switches will always turn on (and auto off) regardless of the below Mode and HSM options."
@@ -158,41 +130,88 @@ def pageConfig() {
 				paragraph "Custom-Arm - turns on the Custom-Arm switch"
 				paragraph "Custom-Disarm - turns on the Custom-Disarm switch"
 				paragraph "Custom-ReArm - turns on the Custom-Disarm switch, then turns on the Custom-Arm switch (after a delay if this option is enabled for Custom-ReArm)"
+				
+				input "includeButtonsCustom", "bool", required: true, defaultValue: false, submitOnChange: true,
+					title: "Create the custom button child devices."
+
+				paragraph "**Changing this may require you to update the tile devices for your Keypad dashboard**"
 			}
 
 			section(getFormat("header-green", "Virtual Keypad Mode Options")) {
-				input "changeModes", "bool", required: true, defaultValue: true, submitOnChange: true,
-					title: "Have the Keypad app change modes directly. Default: On/true"
-					
+				input "changeModes", "bool", required: true, defaultValue: false, submitOnChange: true,
+					title: "Have the Keypad app change modes directly."
+
 				if(changeModes){
-					paragraph "change to specific mode before executing final mode change"
-				
-					input "defaultMode", "mode", required: false, multiple: false, submitOnChange: true,
-						title: "Change to this mode before executing the below modes"	
 					
-					input "defaultModeTrigger", "mode", required: defaultMode, multiple: true,
-						title: "These modes will execute after switching to the above mode (after delay if set)"
+					input "buttonsModesIncluded", "enum", required: changeModes, multiple: true, options: buttonsModes, defaultValue: buttonsModes, submitOnChange: true,
+						title: "Create the Mode button child devices"				
+				
+				
+					paragraph "Only Modes selected above will be available on the Keypad.  **Changing this may require you to update the tile devices for your Keypad dashboard**"
+					
+					/*  // Limited to buttonsModesIncluded choices
+					input "defaultMode", "enum", required: false, multiple: false, options: buttonsModesIncluded,
+						title: "Change to this mode before executing the below modes"
+					*/
+
+					// all modes available for default, do not need to create a child device for this function
+					input "defaultMode", "mode", required: false, multiple: false, submitOnChange: true,
+						title: "Change to this mode before executing the below modes"
+					
+					
+					input "defaultModeTrigger", "enum", required: false, multiple: true, options: buttonsModesIncluded,
+						title: "These modes will execute after switching to the above mode (after delay if set)"						
+
 				}
 			}
 			
 			section(getFormat("header-green", "Virtual Keypad HSM Options")) {
-				/*
-				input "customHSM", "bool", required: false, defaultValue: false, submitOnChange: true,
-					title: "Toggle custom triggers for RM or other apps to run logic. Default: Off/false"
-				if (customHSM){
-					input "availableCustomHSM", "enum", required: customHSM, multiple: true, options: ["Arm","ReArm","Disarm"],
-						title: "Allow these generic HSM triggers to be toggled from keypad"
-				}
-				*/
-			
-				input "changeHSM", "bool", required: true, defaultValue: true, submitOnChange: true,
-					title: "Have the Keypad app change HSM directly. Default: On/true"
+				input "changeHSM", "bool", required: true, defaultValue: false, submitOnChange: true,
+					title: "Have the Keypad app change HSM directly."
+
+				if(changeHSM){
+					
+					input "buttonsHSMIncluded", "enum", required: changeHSM, multiple: true, options: buttonsHSM, defaultValue: buttonsHSM, submitOnChange: true,
+						title: "Create the HSM button child devices"
+				
+				
+					paragraph "Only HSM options selected above will be available on the Keypad.  **Changing this may require you to update the tile devices for your Keypad dashboard**"
+				}					
+					
 			}
 
-			section(getFormat("header-green", "HSM Cancel Alerts Options")) {
-				input "cancelAlertsOnDisarm", "bool", required: true, defaultValue: true, submitOnChange: true,
-					title: "When 'On', HSM alerts will be cancelled when any of the disarm commands are used. Default: On/true"
-			}
+			section(getFormat("header-green", "Virtual Keypad Command Button Settings")) {
+			
+				if(!changeHSM && !changeModes && !includeButtonsCustom){
+					paragraph "<b>** You must select some commands for child devices above **</b>"
+				} else {
+				
+					paragraph "Configure your keypad options"
+					input "armDelay", "bool", required: false, defaultValue: false, submitOnChange: true,
+						title: "Delay before executing button commands. Default: Off/false"
+					if (armDelay){
+						input "armDelaySeconds", "number", required: armDelay, range: "10..90", defaultValue: 30,
+							title: "Number of seconds before button commands are executed. Default: 30, range 10-90"
+
+						input "armDelaySecondsGroup", "enum", required: armDelay, multiple: true, options: updateButtonOptions(buttonsCustom,buttonsHSMIncluded,buttonsModesIncluded),
+							title: "What commands do you want to delay before executing?"
+					}
+					
+					paragraph ""
+					paragraph ""
+					paragraph "Select commands you do NOT require a code to execute:"
+					input "noCodeRequired", "enum", required: false, multiple: true, options: updateButtonOptions(buttonsCustom,buttonsHSMIncluded,buttonsModesIncluded),
+						title: "These commands need NO code to execute"
+
+					paragraph ""
+					paragraph ""
+					input "cancelAlertsOnDisarm", "bool", required: true, defaultValue: true, submitOnChange: true,
+						title: "When 'On', HSM alerts will be cancelled when any of the disarm commands are used. Default: On/true"
+						paragraph "Disarm Commands: Custom-Disarm, HSM-disarm, HSM-disarmAll, HSM-disarmRules, any mode with 'disarm' in the name"
+					
+				}
+				
+			}			
 
 			section(getFormat("header-green", "Virtual Keypad Lock Codes")) {
 				paragraph "Set lock codes in the keypad device or using an app like Lock Code Manager"
@@ -213,11 +232,26 @@ def pageConfig() {
 		}
 		
         section(getFormat("header-green", "Maintenance")) {
-            label title: "Enter a name for this keypad app child", required:false, submitOnChange:true
+			input "label", "string", title: "Enter a name for this keypad app child", required:false, submitOnChange:true, defaultValue:dataName
             input "logEnable","bool", title: "Enable Debug Logging", description: "Debugging", defaultValue: false, submitOnChange: true
 		}
 		display2()
 	}
+}
+
+def updateButtonOptions(buttonsCustom,buttonsHSMIncluded,buttonsModesIncluded){
+	if(logEnable) log.debug "includeButtonsCustom: ${includeButtonsCustom} - changeHSM: ${changeHSM} - changeModes: ${changeModes}"
+	def options = []
+	if(includeButtonsCustom && buttonsCustom){
+		options.addAll(buttonsCustom)
+	}
+	if(changeHSM && buttonsHSMIncluded){
+		options.addAll(buttonsHSMIncluded)
+	}
+	if(changeModes && buttonsModesIncluded){
+		options.addAll(buttonsModesIncluded)
+	}
+	return options
 }
 
 def display() {
@@ -257,6 +291,11 @@ def createKeypadChildDevice() {
 
 def setDefaults() {
 	if(logEnable == null){logEnable = true}
+	/*
+	if(changeHSM == null){changeHSM = true}
+	if(changeModes == null){changeModes = true}
+	if(includeButtonsCustom == null){includeButtonsCustom = true}
+	*/
 }
 
 def getFormat(type, myText="") {			// Modified from @Stephack Code   

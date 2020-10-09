@@ -8,12 +8,24 @@
       "category": "Security",
       "location": "https://raw.githubusercontent.com/michaelbarone/hubitat/master/packagemanager/packageManifest.json",
       "description": "Create virtual keypads to control HSM and Mode changes",
-	  "tags": [
-            "Alarm Systems",
-            "Dashboards",
-            "Safety & Security"
+      "tags": [
+        "Alarm Systems",
+        "Dashboards",
+        "Safety & Security"
       ],
       "id": "61d0fabf-d211-4b76-968d-2beed62788d6"
+    },
+    {
+      "id": "5f5f9c1f-940e-4246-b204-30f77aee470d",
+      "name": "Virtual Basic Keypad",
+      "category": "Security",
+      "location": "https://raw.githubusercontent.com/michaelbarone/hubitat/master/packagemanager/virtualBasicKeypadManifest.json",
+      "description": "Create Basic Keypads to help secure HSM changes",
+      "tags": [
+        "Alarm Systems",
+        "Dashboards",
+        "Safety & Security"
+      ]	  
     }
   ]
 }

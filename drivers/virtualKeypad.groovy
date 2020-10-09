@@ -20,6 +20,7 @@
  * 	 10-01-20	mbarone			added Panic button integration
  * 	 10-03-20	mbarone			added SecurityKeypad capability to help integrate into HSM and other apps that use this feature
  * 	 10-05-20	mbarone			added lastCodeName attribute so RM could pick up the changes
+ * 	 10-08-20	mbarone			only adds child devices that are selected in the app, will remove child devices that are not selected in the app
  */
 
 import groovy.json.JsonSlurper
@@ -27,7 +28,7 @@ import groovy.json.JsonOutput
 
 def setVersion(){
     state.name = "Virtual Keypad"
-	state.version = "0.0.5"
+	state.version = "0.0.6"
 } 
  
 metadata {
@@ -39,19 +40,22 @@ metadata {
     preferences {
 		input name: "optEncrypt", type: "bool", title: "Enable lockCode encryption", defaultValue: false, description: ""
         input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: true
+		input name: "src", type: "text", title: "Keypad Dashboard Url for iFrame",  required: false
 	}
 
 	attribute "Details","string"
 	attribute "lastCodeName","string"
+	attribute "Keypad", "text"
 
-    command "createChildren"
-	command "removeChild", [[name:"deviceNetworkID*",type:"STRING"]]
+    //command "createChildren"
+	//command "removeChild", [[name:"deviceNetworkID*",type:"STRING"]]
 }
 
 def configureSettings(settings){
 	state.noCodeRequired = ["none"]
 	state.defaultMode = ""
 	state.defaultModeTrigger = ["none"]
+	state.armDelaySecondsGroup = ["none"]
 	state.panicPressCount = 0
 	state.notifyCount = 0	
 	settings.each{
@@ -99,6 +103,10 @@ def configureSettings(settings){
 			case "cancelAlertsOnDisarm":
 				state.cancelAlertsOnDisarm = it.value
 				break
+				
+			case "availableButtons":
+				state.availableButtons = it.value
+				break	
 		}
 	}
 	createChildren()
@@ -112,7 +120,7 @@ def logsOff(){
 def installed() {
 	clearCode()
 	resetInputDisplay()
-    updated()
+    clearDetails()
     sendEvent(name:"maxCodes",value:20)
     sendEvent(name:"codeLength",value:4)
 	state.notifyCount = 0
@@ -122,7 +130,14 @@ def installed() {
 def updated() {
 	createChildren()
 	clearDetails()
-    if (logEnable) {
+	if(device.currentValue("Keypad") != src){
+		if(src != ""){
+			sendEvent(name: "Keypad", value: "<div style='height: 100%; width: 100%'><iframe src='${src}' style='height: 100%; width:100%; border: none;'></iframe><div>")
+		} else {
+			sendEvent(name: "Keypad", value: "")
+		}
+	}
+	if (logEnable) {
 		log.warn "debug logging enabled..."
 		runIn(1800,logsOff)
 	}
@@ -384,6 +399,7 @@ def createChildren(){
     if (logEnable) log.debug "Creating Child Devices"
 
 	// create all buttons
+	/*
 	def theCommands = location.modes.clone()
 	theCommands = theCommands.collect { "Mode-$it" }
 	//log.debug theCommands
@@ -391,7 +407,13 @@ def createChildren(){
 	HSM = HSM.collect { "HSM-$it" }
 	theCommands.addAll(HSM)
 	theCommands.addAll(["Clear","Custom-Arm","Custom-ReArm","Custom-Disarm","Number","Panic"])
+	*/
+	
+	def theCommands = state.availableButtons.clone()
+	theCommands.addAll(["Clear","Number","Panic"])
 	//log.debug theCommands
+	def allButtons = ["InputDisplay"]
+	allButtons.addAll(theCommands)
 	
 	// create all buttons
 	theCommands.each {
@@ -427,6 +449,23 @@ def createChildren(){
 		}
 	}
 	
+	if (logEnable) log.debug "removing any child devices that are no longer selected in app"
+	childDevices.each {
+		try{
+			if (logEnable) log.debug "checking ${it.deviceNetworkId}"
+			//def command = it.deviceNetworkId.split("-")[-1]
+			def command = it.deviceNetworkId.replace("${device.deviceNetworkId}-","")
+			if(allButtons.contains(command)){
+			} else {
+				if (logEnable) log.debug "removing ${it.deviceNetworkId}" 
+				deleteChildDevice(it.deviceNetworkId)
+			}
+		}
+		catch (e) {
+			if (logEnable) log.debug "Error deleting ${it.deviceNetworkId}: ${e}"
+		}
+	}	
+	
 	// create input display
 	['InputDisplay'].each {
 		foundChildDevice = null
@@ -437,40 +476,6 @@ def createChildren(){
 			if (logEnable) log.debug "createChildDevice:  Creating Child Device '${device.displayName} (${it})'"
 			try {
 				def deviceHandlerName = "Virtual Keypad Input Display Child"
-				addChildDevice(deviceHandlerName,
-								"${device.deviceNetworkId}-${it}",
-								[
-									completedSetup: true, 
-									label: "${device.displayName} (${it})", 
-									isComponent: true, 
-									name: "${device.displayName} (${it})",
-									componentName: "${it}", 
-									componentLabel: "${it}"
-								]
-							)
-				sendEvent(name:"Details", value:"Child device created!  May take some time to display.")
-				unschedule(clearDetails)
-				runIn(300,clearDetails)
-			}
-			catch (e) {
-				log.error "Child device creation failed with error = ${e}"
-				sendEvent(name:"Details", value:"Child device creation failed. Please make sure that the '${deviceHandlerName}' is installed and published.", displayed: true)
-			}
-		} else {
-			if (logEnable) log.debug "createChildDevice: Child Device '${device.displayName} (${it})' found! Skipping"
-		}
-	}
-	
-	// create iFrame
-	['iFrame'].each {
-		foundChildDevice = null
-		foundChildDevice = getChildDevice("${device.deviceNetworkId}-${it}")
-	
-		if(foundChildDevice=="" || foundChildDevice==null){
-	
-			if (logEnable) log.debug "createChildDevice:  Creating Child Device '${device.displayName} (${it})'"
-			try {
-				def deviceHandlerName = "Virtual Keypad iFrame Child"
 				addChildDevice(deviceHandlerName,
 								"${device.deviceNetworkId}-${it}",
 								[
