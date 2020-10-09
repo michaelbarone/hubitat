@@ -39,14 +39,11 @@ metadata {
 		capability "Polling"
 		capability "Refresh"
 		capability "Sensor"
-		capability "Switch"		
-		capability "Health Check"
 		
-		attribute "Child","string"
 		attribute "Details","string"
-		
-		//command "changeChildValue"
-		command "removeChildren"		
+		attribute "lastPoll","string"
+
+		command "removeChildren"
 	}
 
 	preferences {
@@ -73,12 +70,14 @@ def parse(description) {
 	}
 }
 	
-
+def refresh(){
+	poll()
+}
 
 def poll() {
 	def nowDay = new Date().format("MMM dd", location.timeZone)
 	def nowTime = new Date().format("h:mm a", location.timeZone)
-	sendEvent(name:"Details", value:"Poll Started "+ nowDay + " at " + nowTime, displayed: true)
+	sendEvent(name:"lastPoll", value:"Poll Started "+ nowDay + " at " + nowTime, displayed: true)
 	logDebug "poll starting"
     def hosthex = convertIPtoHex(dest_ip)
     def porthex = convertPortToHex(dest_port)
@@ -99,7 +98,13 @@ def poll() {
 	sendHubCommand(hubAction)
 }
 
+def updated() {
+	clearDetails()
+}
 
+def clearDetails(){
+	sendEvent(name:"Details", value:"Running Normally.")
+}
 
 private String convertIPtoHex(ipAddress) { 
     String hex = ipAddress.tokenize( '.' ).collect {  String.format( '%02X', it.toInteger() ) }.join()
@@ -177,10 +182,14 @@ private String convertPortToHex(port) {
 							componentLabel: "${deviceName}"
 						]
 					)
+		unschedule(clearDetails)
+		runIn(300,clearDetails)
         sendEvent(name:"Details", value:"Child device created!  May take some time to display.")
 	}
 	catch (e) {
         log.error "Child device creation failed with error = ${e}"
+		unschedule(clearDetails)
+		runIn(300,clearDetails)		
         sendEvent(name:"Details", value:"Child device creation failed. Please make sure that the '${deviceHandlerName}' is installed and published.", displayed: true)
 	}
  }
@@ -195,6 +204,8 @@ private String convertPortToHex(port) {
 			logDebug "Error deleting ${it.deviceNetworkId}: ${e}"
 		}
 	}
+	unschedule(clearDetails)
+	runIn(300,clearDetails)
 	sendEvent(name:"Details", value:"Child devices removed!  Refresh/Poll when ready to re-build child devices, or wait until a device changes state.")
  }
 
