@@ -325,7 +325,6 @@ def createKeypadChildDevice() {
 		}
     } else {
         statusMessageD = "<b>Device Name (${dataName}) already exists.</b>"
-		app.clearSetting("dataName")
     }
     return statusMessageD
 }
