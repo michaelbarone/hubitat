@@ -17,6 +17,7 @@
  *    ----        ---            ----
  * 	 9-26-20	mbarone			initial release
  * 	 10-01-20	mbarone			added panic option with tamper trigger
+ * 	 10-16-20	mbarone			bugfix in buttonpress logic
  */
  
 def setVersion(){
@@ -59,9 +60,6 @@ def updated() {
 def push(evt) {
 	def btn = device.deviceNetworkId.split("-")[-1]
 	if (logEnable) log.debug "push(${evt}) called using ${btn}"
-	if(evt==null){
-		return
-	}
 	if(btn == "Clear"){
 		sendEvent(name: "pushed", value: "1", isStateChange  : true)
 		parent.buttonPress("${btn}")
@@ -69,6 +67,9 @@ def push(evt) {
 		sendEvent(name: "pushed", value: "1", isStateChange  : true)
 		parent.buttonPress("${btn}")
 	} else if(btn == "Number" || btn == "Button"){
+		if(evt==null){
+			return
+		}
 		sendEvent(name: "pushed", value: evt, isStateChange  : true)
 		parent.buttonPress("${evt}")		
 	} else {

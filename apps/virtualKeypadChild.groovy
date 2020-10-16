@@ -18,11 +18,12 @@
  * 	 9-26-20	mbarone			initial release 
  * 	 10-01-20	mbarone			added panic button
  * 	 10-08-20	mbarone			command button customization.  choose the command buttons you want child devices created for
+ * 	 10-16-20	mbarone			added user defined custom commands (adjusted version down to 0.0.4 to match change history
  */
  
  def setVersion(){
     state.name = "Virtual Keypad Child"
-	state.version = "0.0.5"
+	state.version = "0.0.4"
 }
 
 definition(
@@ -102,6 +103,10 @@ def pageConfig() {
 		buttonsHSM = buttonsHSM.collect { "HSM-$it" }
 		// also defined in updated block
 		def buttonsCustom = ["Custom-Arm","Custom-ReArm","Custom-Disarm"]
+
+		if(!state.customCommands){
+			state.customCommands = []
+		}
 		
         section("<b>Instructions:</b>", hideable: true, hidden: true) {
 			paragraph "<b>Notes:</b>"
@@ -132,9 +137,26 @@ def pageConfig() {
 				paragraph "Custom-ReArm - turns on the Custom-Disarm switch, then turns on the Custom-Arm switch (after a delay if this option is enabled for Custom-ReArm)"
 				
 				input "includeButtonsCustom", "bool", required: true, defaultValue: false, submitOnChange: true,
-					title: "Create the custom button child devices."
+					title: "Create the above built in custom button child devices."
 
 				paragraph "**Changing this may require you to update the tile devices for your Keypad dashboard**"
+				
+				paragraph ""
+				paragraph ""
+				paragraph ""
+
+			
+				paragraph "You can create custom command triggers below.  These can be for 'GarageDoor' or any RM/automation you want to start from the keypad."
+				input "customCommand", "text", title: "Enter a name for this custom command (ie. 'GarageDoor' or 'ReleaseTheHounds'), do not use spaces or dashes in names (' ' or '-')", required:false, submitOnChange:true
+
+				if(customCommand){
+					state.customCommands << "Custom-${customCommand}"
+					app.clearSetting("customCommand")
+				}
+				
+				state.customCommands.each{
+					input "RemoveCustomCommand--${it}", "button", title: "${it} (click to remove)"
+				}
 			}
 
 			section(getFormat("header-green", "Virtual Keypad Mode Options")) {
@@ -182,7 +204,7 @@ def pageConfig() {
 
 			section(getFormat("header-green", "Virtual Keypad Command Button Settings")) {
 			
-				if(!changeHSM && !changeModes && !includeButtonsCustom){
+				if(!changeHSM && !changeModes && !includeButtonsCustom && state.customCommands==[]){
 					paragraph "<b>** You must select some commands for child devices above **</b>"
 				} else {
 				
@@ -207,7 +229,7 @@ def pageConfig() {
 					paragraph ""
 					input "cancelAlertsOnDisarm", "bool", required: true, defaultValue: true, submitOnChange: true,
 						title: "When 'On', HSM alerts will be cancelled when any of the disarm commands are used. Default: On/true"
-						paragraph "Disarm Commands: Custom-Disarm, HSM-disarm, HSM-disarmAll, HSM-disarmRules, any mode with 'disarm' in the name"
+						paragraph "Disarm Commands: Custom-Disarm, HSM-disarm, HSM-disarmAll, HSM-disarmRules, any mode or custom command with 'disarm' in the name"
 					
 				}
 				
@@ -239,9 +261,26 @@ def pageConfig() {
 	}
 }
 
+void appButtonHandler(btn){
+	def customCommand = btn.split("--")[-1]
+	btn = btn.split("--")[0]
+	
+	log.debug customCommand
+	log.debug btn
+	
+	switch(btn){
+		case "RemoveCustomCommand":
+			state.customCommands.remove(customCommand)
+			break
+	}
+}
+
 def updateButtonOptions(buttonsCustom,buttonsHSMIncluded,buttonsModesIncluded){
 	if(logEnable) log.debug "includeButtonsCustom: ${includeButtonsCustom} - changeHSM: ${changeHSM} - changeModes: ${changeModes}"
 	def options = []
+	if(state.customCommands){
+		options.addAll(state.customCommands)
+	}
 	if(includeButtonsCustom && buttonsCustom){
 		options.addAll(buttonsCustom)
 	}
@@ -270,9 +309,6 @@ def display2() {
 	}       
 }
 
-
-
-
 def createKeypadChildDevice() {
     if(logEnable) log.debug "In createKeypadChildDevice (${state.version})"
     statusMessageD = ""
@@ -282,9 +318,14 @@ def createKeypadChildDevice() {
             addChildDevice("mbarone", "Virtual Keypad", dataName, 1234, ["name": "${dataName}", isComponent: false])
             if(logEnable) log.debug "In createKeypadChildDevice - Child device has been created! (${dataName})"
             statusMessageD = "<b>Device has been been created. (${dataName})</b>"
-        } catch (e) { if(logEnable) log.debug "Simple Groups unable to create device - ${e}" }
+        } catch (e) {
+			if(logEnable) log.debug "Virtual Keypad Child App unable to create keypad device - ${e}" 
+			statusMessageD = "<b>Device Name (${dataName}) already exists, cannot create new keypad.  Refresh this page to try a new name.</b>"
+			app.clearSetting("dataName")
+		}
     } else {
         statusMessageD = "<b>Device Name (${dataName}) already exists.</b>"
+		app.clearSetting("dataName")
     }
     return statusMessageD
 }

@@ -21,7 +21,6 @@
  * 	 10-03-20	mbarone			added SecurityKeypad capability to help integrate into HSM and other apps that use this feature
  * 	 10-05-20	mbarone			added lastCodeName attribute so RM could pick up the changes
  * 	 10-08-20	mbarone			only adds child devices that are selected in the app, will remove child devices that are not selected in the app
- * 	 10-16-20	mbarone			code/comment cleanup
  */
 
 import groovy.json.JsonSlurper
@@ -29,7 +28,7 @@ import groovy.json.JsonOutput
 
 def setVersion(){
     state.name = "Virtual Keypad"
-	state.version = "0.0.7"
+	state.version = "0.0.6"
 } 
  
 metadata {
@@ -47,6 +46,9 @@ metadata {
 	attribute "Details","string"
 	attribute "lastCodeName","string"
 	attribute "Keypad", "text"
+
+	command "customCommandCreateOrUpdate", [[name:"Name*",type:"STRING",description:"Only Letters and Numbers, do not use spaces or '-'"],[name:"noCodeRequired*",type:"ENUM",constraints:["false","true"]],[name:"armDelay*",type:"ENUM",constraints:["false","true"]]]
+	command "customCommandRemove", [[name:"Name*",type:"STRING",description:"Type the custom command device name you want to remove"]]
 }
 
 def configureSettings(settings){
@@ -123,9 +125,13 @@ def installed() {
     sendEvent(name:"codeLength",value:4)
 	state.notifyCount = 0
 	state.panicPressCount = 0
+	state.customCommands = [:]
 }
 
 def updated() {
+	if(!state.customCommands){
+		state.customCommands = [:]
+	}
 	createChildren()
 	clearDetails()
 	if(device.currentValue("Keypad") != src){
@@ -143,7 +149,7 @@ def updated() {
 
 def commandMode(action,btn){
 	def displayDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
-	if(checkInputCode(btn)){
+	if(checkInputCode(action,btn)){
 		// set default mode if set
 		if(state.defaultMode != "" && state.defaultModeTrigger.any{btn.contains(it)}){
 			parent.setMode(state.defaultMode)
@@ -174,7 +180,7 @@ def commandMode(action,btn){
 
 def commandHSM(action,btn){
 	def displayDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
-	if(checkInputCode(btn)){
+	if(checkInputCode(action,btn)){
 		// cancel HSM alerts if set and mode has disarm in name
 		if(state.cancelAlertsOnDisarm == true && btn.toLowerCase().contains("disarm")){
 			cancelHSMAlerts()
@@ -201,7 +207,7 @@ def commandHSM(action,btn){
 
 def commandCustom(action,btn){
 	def displayDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
-	if(checkInputCode(btn)){
+	if(checkInputCode(action,btn)){
 		// cancel HSM alerts if set and mode has disarm in name
 		if(state.cancelAlertsOnDisarm == true && btn.toLowerCase().contains("disarm")){
 			cancelHSMAlerts()
@@ -210,7 +216,7 @@ def commandCustom(action,btn){
 			displayDevice?.updateInputDisplay("Success.  Executing Disarm")
 			getChildDevice("${device.deviceNetworkId}-Custom-Disarm")?.on()
 		}
-		if(state.armDelay && state.armDelaySecondsGroup.any{btn.contains(it)}){
+		if(state.armDelay && state.armDelaySecondsGroup.any{btn.contains(it)} || (state.customCommands[action] && state.customCommands[action]['armDelay']=='true')){
 			def timeLeft = state.armDelaySeconds
 			state.armDelaySeconds.times{
 				timeLeft = timeLeft -  1
@@ -238,12 +244,12 @@ def timeoutClearCode(){
 	runIn(5,resetInputDisplay)	
 }
 
-def checkInputCode(btn){
+def checkInputCode(action,btn){
 	if (logEnable) log.debug "checkInputCode"
 	
 	def codeAccepted = false
 	
-	if(state.noCodeRequired.any{btn.contains(it)}) {
+	if(state.noCodeRequired.any{btn.contains(it)} || (state.customCommands[action] && state.customCommands[action]['noCodeRequired']=='true')) {
 		codeAccepted = true
 		sendEvent(name:"UserInput", value: "Success", descriptionText: "No code was required to execute " + btn, displayed: true)
 		if (logEnable) log.debug "${btn} executed with no entered code"
@@ -390,11 +396,82 @@ def buttonPress(btn) {
 	}	
 }
 
+def customCommandRemove(Name){
+	def cc = "Custom-${Name}"
+	if (logEnable) log.debug "customCommandRemove:  Attempt to remove Device '${device.deviceNetworkId}-${cc}'"
+	foundChildDevice = null
+	foundChildDevice = getChildDevice("${device.deviceNetworkId}-${cc}")
+	if(foundChildDevice!="" || foundChildDevice!=null){
+		removeChild("${device.deviceNetworkId}-${cc}")
+		state.customCommands.remove(Name)
+	}
+}
+
+def customCommandCreateOrUpdate(Name,noCodeRequired,armDelay){
+	def cc = "Custom-${Name}"
+	foundChildDevice = null
+	foundChildDevice = getChildDevice("${device.deviceNetworkId}-${cc}")
+
+	if(foundChildDevice=="" || foundChildDevice==null){
+
+		if (logEnable) log.debug "createChildDevice:  Creating Child Device '${device.deviceNetworkId}-${cc}'"
+		try {
+			def deviceHandlerName = "Virtual Keypad Button Child"
+			addChildDevice(deviceHandlerName,
+							"${device.deviceNetworkId}-${cc}",
+							[
+								completedSetup: true, 
+								label: "${device.displayName} (${cc})", 
+								isComponent: true,
+								name: "${device.displayName} (${cc})",
+							]
+						)
+			sendEvent(name:"Details", value:"Child Device '${device.displayName}-${cc}' created!")
+			unschedule(clearDetails)
+			runIn(300,clearDetails)
+		}
+		catch (e) {
+			log.error "Child device creation failed with error = ${e}"
+			sendEvent(name:"Details", value:"Child device creation failed. Please make sure that the '${deviceHandlerName}' is installed and published.", displayed: true)
+		}
+	} else {
+		if (logEnable) log.debug "createChildDevice: Child Device '${device.displayName}-${cc}' found! Skipping"
+		sendEvent(name:"Details", value:"Child Device '${device.displayName}-${cc}' updated!")
+		unschedule(clearDetails)
+		runIn(300,clearDetails)
+	}
+
+	foundChildDevice = null
+	foundChildDevice = getChildDevice("${device.deviceNetworkId}-${cc}")
+	if(foundChildDevice!="" || foundChildDevice!=null){	
+		if(!state.customCommands) {
+			state.customCommands = [:]
+		}
+		if (state.customCommands."${Name}") {
+			state.customCommands."${Name}"."noCodeRequired" = "${noCodeRequired}"
+			state.customCommands."${Name}"."armDelay" = "${armDelay}"
+		} else {
+			state.customCommands."${Name}" = [:]
+			state.customCommands."${Name}"."noCodeRequired" = "${noCodeRequired}"
+			state.customCommands."${Name}"."armDelay" = "${armDelay}"
+		}
+	}
+}
 
 def createChildren(){
     if (logEnable) log.debug "Creating Child Devices"
 
 	// create all buttons
+	/*
+	def theCommands = location.modes.clone()
+	theCommands = theCommands.collect { "Mode-$it" }
+	//log.debug theCommands
+	def HSM = ["armAway", "armHome", "armNight", "disarm", "armRules", "disarmRules", "disarmAll", "armAll", "cancelAlerts"]
+	HSM = HSM.collect { "HSM-$it" }
+	theCommands.addAll(HSM)
+	theCommands.addAll(["Clear","Custom-Arm","Custom-ReArm","Custom-Disarm","Number","Panic"])
+	*/
+	
 	def theCommands = state.availableButtons.clone()
 	theCommands.addAll(["Clear","Number","Panic"])
 	//log.debug theCommands
@@ -442,6 +519,7 @@ def createChildren(){
 			//def command = it.deviceNetworkId.split("-")[-1]
 			def command = it.deviceNetworkId.replace("${device.deviceNetworkId}-","")
 			if(allButtons.contains(command)){
+			} else if(command.contains("Custom-") && !["Custom-Arm","Custom-ReArm","Custom-Disarm"].contains(command)){
 			} else {
 				if (logEnable) log.debug "removing ${it.deviceNetworkId}" 
 				deleteChildDevice(it.deviceNetworkId)
