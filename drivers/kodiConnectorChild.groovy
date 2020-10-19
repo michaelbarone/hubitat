@@ -48,8 +48,10 @@ metadata {
 	
 	command "viewMotionCameraID", [[name:"cameraID*",type:"NUMBER",description:"The Camera ID from the KODI plugin"]]
 	command "viewMotionCameraDirect", [[name:"cameraName*",type:"STRING"],[name:"cameraURL*",type:"STRING",description:"The Camera image URL"],[name:"cameraUsername",type:"STRING"],[name:"cameraPassword",type:"STRING"]]
+	command "viewAllCamerasDirect", [[name:"camera1*",type:"STRING",description:"The Camera image URL"],[name:"camera2",type:"STRING",description:"The Camera image URL"],[name:"camera3",type:"STRING",description:"The Camera image URL"],[name:"camera4",type:"STRING",description:"The Camera image URL"],[name:"cameraUsername",type:"STRING"],[name:"cameraPassword",type:"STRING"]]
     command "viewAllCameras"
     command "sendClear"
+
 }
 
 def installed() {
@@ -157,6 +159,34 @@ def viewAllCameras(){
 	return sendToKODI(content)
 }
 
+def viewAllCamerasDirect(camera1,camera2="",camera3="",camera4="",cameraUsername="",cameraPassword=""){
+	if (logEnable) log.debug "viewAllCamerasDirect"
+
+    //BUILD PARAMS
+	def myParams = [
+		"addonid":"script.securitycam",
+		"params":[
+			"requestType":"display",
+			"camera1":camera1,
+			"camera2":camera2,
+			"camera3":camera3,
+			"camera4":camera4,
+			"cameraUsername":cameraUsername,
+			"cameraPassword":cameraPassword
+		]
+	]
+	
+    //BUILD BODY
+    def content = [
+		"jsonrpc":"2.0",
+		"method":"Addons.ExecuteAddon",
+		"params": myParams,
+		"id":1
+    ]
+
+	runIn(1,sendClear)
+	return sendToKODI(content)
+}
 
 def viewMotionCameraID(cameraID = null){
 	if (logEnable) log.debug "viewMotionCameraID"

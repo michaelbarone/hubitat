@@ -40,7 +40,9 @@ metadata {
 	attribute "Details","string"
 
 	command "createChild", [[name:"KODI Name*",type:"STRING"]]
-	command "viewMotionCamera", [[name:"cameraID*",type:"NUMBER"]]
+	command "viewMotionCameraID", [[name:"cameraID*",type:"NUMBER",description:"The Camera ID from the KODI plugin"]]
+	command "viewMotionCameraDirect", [[name:"cameraName*",type:"STRING"],[name:"cameraURL*",type:"STRING",description:"The Camera image URL"],[name:"cameraUsername",type:"STRING"],[name:"cameraPassword",type:"STRING"]]
+	command "viewAllCamerasDirect", [[name:"camera1*",type:"STRING",description:"The Camera image URL"],[name:"camera2",type:"STRING",description:"The Camera image URL"],[name:"camera3",type:"STRING",description:"The Camera image URL"],[name:"camera4",type:"STRING",description:"The Camera image URL"],[name:"cameraUsername",type:"STRING"],[name:"cameraPassword",type:"STRING"]]
 	command "viewAllCameras"
 }
 
@@ -76,13 +78,24 @@ def deviceNotification(message){
 	}
 }
 
-def viewMotionCamera(cameraID){
+def viewMotionCameraID(cameraID){
 	childDevices.each {
 		try{
-			it?.viewMotionCamera(cameraID)
+			it?.viewMotionCameraID(cameraID)
 		}
 		catch (e) {
-			if (logEnable) log.debug "Error sending viewMotionCamera to childDevice ${it.deviceNetworkId}: ${e}"
+			if (logEnable) log.debug "Error sending viewMotionCameraID to childDevice ${it.deviceNetworkId}: ${e}"
+		}
+	}
+}
+
+def viewMotionCameraDirect(cameraName,cameraURL,cameraUsername="",cameraPassword=""){
+	childDevices.each {
+		try{
+			it?.viewMotionCameraDirect(cameraName,cameraURL,cameraUsername="",cameraPassword="")
+		}
+		catch (e) {
+			if (logEnable) log.debug "Error sending viewMotionCameraDirect to childDevice ${it.deviceNetworkId}: ${e}"
 		}
 	}
 }
@@ -94,6 +107,17 @@ def viewAllCameras(){
 		}
 		catch (e) {
 			if (logEnable) log.debug "Error sending viewAllCameras to childDevice ${it.deviceNetworkId}: ${e}"
+		}
+	}
+}
+
+def viewAllCamerasDirect(camera1,camera2="",camera3="",camera4="",cameraUsername="",cameraPassword=""){
+	childDevices.each {
+		try{
+			it?.viewAllCamerasDirect(camera1,camera2="",camera3="",camera4="",cameraUsername="",cameraPassword="")
+		}
+		catch (e) {
+			if (logEnable) log.debug "Error sending viewAllCamerasDirect to childDevice ${it.deviceNetworkId}: ${e}"
 		}
 	}
 }
