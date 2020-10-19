@@ -15,6 +15,8 @@
 * 		
 * This driver uses sections of code derived from the original Kodi Media Center driver developed by @josh (Josh Lyon)
 *
+*  To use the video camera view, you must install and configure this plugin for KODI:
+*  https://github.com/michaelbarone/script.securitycam
 *
 *  Change History:
 *
@@ -44,7 +46,8 @@ metadata {
 		input("logEnable", "bool", title: "Enable Debug Logging?:", required: true)
 	}
 	
-	command "viewMotionCamera", [[name:"cameraID*",type:"NUMBER"]]
+	command "viewMotionCameraID", [[name:"cameraID*",type:"NUMBER",description:"The Camera ID from the KODI plugin"]]
+	command "viewMotionCameraDirect", [[name:"cameraName*",type:"STRING"],[name:"cameraURL*",type:"STRING",description:"The Camera image URL"],[name:"cameraUsername",type:"STRING"],[name:"cameraPassword",type:"STRING"]]
     command "viewAllCameras"
     command "sendClear"
 }
@@ -54,28 +57,22 @@ def installed() {
 }
 
 def updated() {
- 	initialize()   
+ 	initialize()
+	if (logEnable) {
+		log.warn "debug logging enabled..."
+		runIn(1800,logsOff)
+	}	
+}
+
+def logsOff(){
+    log.warn "debug logging disabled..."
+    device.updateSetting("logEnable",[value:"false",type:"bool"])
 }
 
 def initialize() {
 }
 
-def sendClear(){
-	log.debug "sendClear"
-
-    //BUILD PARAMS
-    def myParams = [
-        "action":"noop"
-    ]
-    
-    //BUILD BODY
-    def content = [
-       "jsonrpc":"2.0",
-        "method":"Input.ExecuteAction",
-        "params": myParams,
-        "id":1
-    ]
-    
+def sendToKODI(content){
     //BUILD HEADER    
     def myHeaders = [
         "HOST": ip + ":" + port,
@@ -95,13 +92,31 @@ def sendClear(){
         headers: myHeaders
 	)
     
-    log.debug result
-    result
+    if (logEnable) log.debug result
+    return result
+}
 
+def sendClear(){
+	if (logEnable) log.debug "sendClear"
+
+    //BUILD PARAMS
+    def myParams = [
+        "action":"noop"
+    ]
+    
+    //BUILD BODY
+    def content = [
+       "jsonrpc":"2.0",
+        "method":"Input.ExecuteAction",
+        "params": myParams,
+        "id":1
+    ]
+
+	sendToKODI(content)
 }
 
 def deviceNotification(message){
-	log.debug "deviceNotification"
+	if (logEnable) log.debug "deviceNotification"
 	
     //BUILD PARAMS
     def myParams = [
@@ -118,34 +133,33 @@ def deviceNotification(message){
         "params": myParams,
         "id":1
     ]
-    
-    //BUILD HEADER    
-    def myHeaders = [
-        "HOST": ip + ":" + port,
-        "Content-Type":"application/json"
-    ]
-    if(username){
-    	def pair ="$username:$password"
-        def basicAuth = pair.bytes.encodeBase64();
-    	myHeaders.put("Authorization", "Basic " + basicAuth )
-    }
 
-    //SEND NOTIFICATION
-    def result = new hubitat.device.HubAction(
-        method: "POST",
-        path: "/jsonrpc",
-        body: content,
-        headers: myHeaders
-	)
-
-    
-   	runIn(1,sendClear)
-    log.debug result    
-    return result
+	sendToKODI(content)
 }
 
-def viewMotionCamera(cameraID = null){
-	log.debug "viewMotionCamera"
+def viewAllCameras(){
+	if (logEnable) log.debug "viewAllCameras"
+
+    //BUILD PARAMS
+	def myParams = [
+		"addonid":"script.securitycam"
+	]
+	
+    //BUILD BODY
+    def content = [
+		"jsonrpc":"2.0",
+		"method":"Addons.ExecuteAddon",
+		"params": myParams,
+		"id":1
+    ]
+
+	runIn(1,sendClear)
+	return sendToKODI(content)
+}
+
+
+def viewMotionCameraID(cameraID = null){
+	if (logEnable) log.debug "viewMotionCameraID"
 
     //BUILD PARAMS
 	def myParams = [
@@ -163,37 +177,24 @@ def viewMotionCamera(cameraID = null){
 		"params": myParams,
 		"id":1
     ]
-    
-    //BUILD HEADER    
-    def myHeaders = [
-        "HOST": ip + ":" + port,
-        "Content-Type":"application/json"
-    ]
-    if(username){
-    	def pair ="$username:$password"
-        def basicAuth = pair.bytes.encodeBase64();
-    	myHeaders.put("Authorization", "Basic " + basicAuth )
-    }
-
-    //SEND NOTIFICATION
-    def result = new hubitat.device.HubAction(
-        method: "POST",
-        path: "/jsonrpc",
-        body: content,
-        headers: myHeaders
-	)
-
+	
 	runIn(1,sendClear)
-	log.debug result
-    return result
+	return sendToKODI(content)
 }
 
-def viewAllCameras(){
-	log.debug "viewAllCameras"
+def viewMotionCameraDirect(cameraName,cameraURL,cameraUsername="",cameraPassword=""){
+	if (logEnable) log.debug "viewMotionCameraDirect"
 
     //BUILD PARAMS
 	def myParams = [
-		"addonid":"script.securitycam"
+		"addonid":"script.securitycam",
+		"params":[
+			"requestType":"motion",
+			"cameraName":cameraName,
+			"cameraURL":cameraURL,
+			"cameraUsername":cameraUsername,
+			"cameraPassword":cameraPassword
+		]
 	]
 	
     //BUILD BODY
@@ -203,31 +204,11 @@ def viewAllCameras(){
 		"params": myParams,
 		"id":1
     ]
-    
-    //BUILD HEADER    
-    def myHeaders = [
-        "HOST": ip + ":" + port,
-        "Content-Type":"application/json"
-    ]
-    if(username){
-    	def pair ="$username:$password"
-        def basicAuth = pair.bytes.encodeBase64();
-    	myHeaders.put("Authorization", "Basic " + basicAuth )
-    }
-
-    //SEND NOTIFICATION
-    def result = new hubitat.device.HubAction(
-        method: "POST",
-        path: "/jsonrpc",
-        body: content,
-        headers: myHeaders
-	)
 
 	runIn(1,sendClear)
-	log.debug result
-    return result
+	return sendToKODI(content)
 }
 
 def parse(String description) {
-   // log.debug description
+   // if (logEnable) log.debug description
 }

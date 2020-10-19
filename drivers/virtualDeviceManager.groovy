@@ -92,6 +92,9 @@ private removeChildDevices(delete) {
 }
 
 def updated() {
+	if(!state.customDrivers){
+		state.customDrivers = [:]
+	}
 	clearDetails()
 	if (logEnable) {
 		log.warn "debug logging enabled..."
@@ -136,6 +139,17 @@ def createVirutalDevice(deviceName,driver,namespace = "hubitat"){
 						)
 			if (logEnable) log.debug "createChildDevice: Child Device 'VDM-${deviceName}' created!"
 			sendEvent(name:"Details", value:"VDM-${deviceName} child device created!")
+			if(namespace!="hubitat"){
+				if(!state.customDrivers) {
+					state.customDrivers = [:]
+				}
+				if(!state.customDrivers."${namespace}") {
+					state.customDrivers."${namespace}" = []
+				}
+				if(!state.customDrivers."${namespace}".contains(driver)){
+					state.customDrivers."${namespace}".add(driver)
+				}
+			}
 			unschedule(clearDetails)
 			runIn(300,clearDetails)
 		}

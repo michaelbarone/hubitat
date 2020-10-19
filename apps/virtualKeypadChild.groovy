@@ -265,8 +265,8 @@ void appButtonHandler(btn){
 	def customCommand = btn.split("--")[-1]
 	btn = btn.split("--")[0]
 	
-	log.debug customCommand
-	log.debug btn
+	//log.debug customCommand
+	//log.debug btn
 	
 	switch(btn){
 		case "RemoveCustomCommand":
