@@ -54,12 +54,15 @@ def updated() {
     if (str != null && str.length() > 0 && str.charAt(str.length() - 1) == '/') {
         str = str.substring(0, str.length() - 1);
     }
-	state.lastMotionEventImage = str+"/images/"+getDataValue("cameraName")+"/mostRecent.jpg"
- 	initialize()
+	def cameraName = getDataValue("cameraName")
+	if(cameraName != null){
+		state.lastMotionEventImage = str+"/images/"+getDataValue("cameraName")+"/mostRecent.jpg"
+ 	}
+	initialize()
 	if (logEnable) {
 		log.warn "debug logging enabled..."
 		runIn(1800,logsOff)
-	}	
+	}
 }
 
 def logsOff(){
