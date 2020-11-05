@@ -116,20 +116,37 @@ def addCamera(camera){
 	}
 }
 
-def captureEvent(cameraName,cameraURL,cCount=captureCount,cDelay=captureDelay,uname=username,pword=password){
+def captureEvent(cameraName,cameraURL,cCount=null,cDelay=null,uname=null,pword=null){
+       
 	def params = [uri: "${webServerURL}/motionCapture.php",contentType: "application/x-www-form-urlencoded"]
 	params['body'] = ["cameraName":cameraName,
-						"cameraUrl":cameraURL,
-						"captureCount":cCount,
-						"captureDelay":cDelay
+						"cameraUrl":cameraURL
 					]
-					
-	if(uname && uname != ""){
+
+ 	if(cCount && cCount != "" && cCount != null){
+    	params['body'].put("captureCount", cCount)
+    }
+    if(cCount == null && (captureCount != null && captureCount != "")){
+        params['body'].put("captureCount", captureCount)
+    }
+	if(cDelay && cDelay != "" && cDelay != null){
+    	params['body'].put("captureDelay", pword)
+    }
+    if(cDelay == null && (captureDelay != null && captureDelay != "")){
+        params['body'].put("captureDelay", captureDelay)
+    }    
+	if(uname && uname != "" && uname != null){
     	params['body'].put("username", uname)
     }
-	if(pword && pword != ""){
+	if(uname == null && (username != null && username != "")){
+    	params['body'].put("username", username)
+    }    
+	if(pword && pword != "" && pword != null){
     	params['body'].put("password", pword)
     }
+	if(pword == null && (password != null && password != "")){
+    	params['body'].put("password", password)
+    }     
 	if (logEnable) log.debug "attempting post:"
 	if (logEnable) log.debug params
 	try {
