@@ -34,7 +34,7 @@ metadata {
 	}
 
     preferences {
-		input name: "webServerURL", type: "text", title: "Web Server URL", description: "Full path to the CameraMotionCapture webapp", required: true
+		input name: "webServerURL", type: "text", title: "Web Server URL", description: "Full path to the CameraMotionCapture webapp. ie:  http://webserverIP/CameraMotionCapture/", required: true
         input name: "captureCount", type: "number", title: "Capture Frame Count", defaultValue: 5, description: "How many images do you want to save for each motion event"
         input name: "captureDelay", type: "number", title: "Delay Between Frames", defaultValue: 3, description: "How many seconds between image captures for each motion event"
 		input name: "username", type: "text", title: "Username", description: "Username if cameras require authentication"
@@ -117,8 +117,12 @@ def addCamera(camera){
 }
 
 def captureEvent(cameraName,cameraURL,cCount=null,cDelay=null,uname=null,pword=null){
-       
-	def params = [uri: "${webServerURL}/motionCapture.php",contentType: "application/x-www-form-urlencoded"]
+
+	def str = webServerURL
+    if (str != null && str.length() > 0 && str.charAt(str.length() - 1) == '/') {
+        str = str.substring(0, str.length() - 1);
+    }
+	def params = [uri: "${str}/motionCapture.php",contentType: "application/x-www-form-urlencoded"]
 	params['body'] = ["cameraName":cameraName,
 						"cameraUrl":cameraURL
 					]
@@ -157,7 +161,11 @@ def captureEvent(cameraName,cameraURL,cCount=null,cDelay=null,uname=null,pword=n
 }
 
 def clearOldEvents(daysToKeep=daysToKeepEvents, camera=null){
-	def params = [uri: "${webServerURL}/clearOldEvents.php",contentType: "application/x-www-form-urlencoded"]
+	def str = webServerURL
+    if (str != null && str.length() > 0 && str.charAt(str.length() - 1) == '/') {
+        str = str.substring(0, str.length() - 1);
+    }
+	def params = [uri: "${str}/clearOldEvents.php",contentType: "application/x-www-form-urlencoded"]
 	params['body'] = ["daysToKeep":daysToKeep]
 	
 	if(camera!=null && camera!=""){
