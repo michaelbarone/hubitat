@@ -130,7 +130,7 @@ def captureEvent(cameraName,cameraURL,cCount=null,cDelay=null,uname=null,pword=n
         params['body'].put("captureCount", captureCount)
     }
 	if(cDelay && cDelay != "" && cDelay != null){
-    	params['body'].put("captureDelay", pword)
+    	params['body'].put("captureDelay", cDelay)
     }
     if(cDelay == null && (captureDelay != null && captureDelay != "")){
         params['body'].put("captureDelay", captureDelay)
