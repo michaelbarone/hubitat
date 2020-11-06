@@ -20,12 +20,13 @@
  *    Date        Who            What
  *    ----        ---            ----
  * 	 11-4-20	mbarone			initial release 
+ * 	 11-6-20	mbarone			added lastMotion attributes and versionCheck for webserver version 
  */
  
  
 def setVersion(){
     state.name = "Camera Motion Capture"
-	state.version = "0.0.1"
+	state.version = "0.0.2"
 } 
  
 metadata {
@@ -44,6 +45,8 @@ metadata {
 	}
 
 	attribute "Details","string"
+	attribute "lastMotionDevice","string"
+	attribute "lastMotionTime","string"
 	attribute "iFrame", "text"
 	
 	command "addCamera", [[name:"Camera Name*",type:"STRING",description:"This Cannot Be changed without removing and re-adding the camera"]]
@@ -121,6 +124,9 @@ def addCamera(camera){
 }
 
 def captureEvent(cameraName,cameraURL,cCount=null,cDelay=null,uname=null,pword=null){
+
+	sendEvent(name:"lastMotionDevice", value:cameraName)
+	sendEvent(name:"lastMotionTime", value:new Date())
 
 	def str = webServerURL
     if (str != null && str.length() > 0 && str.charAt(str.length() - 1) == '/') {
