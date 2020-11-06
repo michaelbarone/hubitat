@@ -48,6 +48,7 @@ metadata {
 	
 	command "addCamera", [[name:"Camera Name*",type:"STRING",description:"This Cannot Be changed without removing and re-adding the camera"]]
 	command "clearOldEvents", [[name:"daysToKeep*",type:"NUMBER"]]
+	command "checkForWebserverUpdates"
 }
 
 def logsOff(){
@@ -56,6 +57,7 @@ def logsOff(){
 }
 
 def installed() {
+	runIn(5,checkForWebserverUpdates)
 }
 
 def updated() {
@@ -65,6 +67,8 @@ def updated() {
 	if(daysToKeepEvents>0){
 		schedule("0 5 0 1/1 * ? *", clearOldEvents)
 	}
+	// set schedule to check webserver for updates
+	schedule("0 22 1/12 ? * * *", checkForWebserverUpdates)
 	
 	sendEvent(name: "iFrame", value: "<div style='height: 100%; width: 100%'><iframe src='${webServerURL}' style='height: 100%; width:100%; border: none;'></iframe><div>")
 	clearDetails()
@@ -178,5 +182,26 @@ def clearOldEvents(daysToKeep=daysToKeepEvents, camera=null){
 		httpPost(params) {}
 	} catch (e) {
 		log.error "something went wrong on clearOldEvents: $e"
+	}
+}
+
+def checkForWebserverUpdates(){
+	def str = webServerURL
+    if (str != null && str.length() > 0 && str.charAt(str.length() - 1) == '/') {
+        str = str.substring(0, str.length() - 1);
+    }
+	if (logEnable) log.debug "attempting Version Get request:"
+	def url = "${str}/versionCheck.php";
+	try {
+		httpGet(url) { resp ->
+            if (resp.data){
+                if (logEnable) log.debug "Version Check = ${resp.data} - last check: "+new Date()
+                state.webserver = "${resp.data} - last check: "+new Date()
+            } else {
+				state.webserver = "Could not check webserver version"
+			}
+		}
+	} catch (e) {
+		log.error "something went wrong on checkForWebserverUpdates: $e"
 	}
 }
