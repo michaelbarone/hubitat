@@ -126,7 +126,7 @@ def captureEvent(cameraName,cameraURL,cCount=null,cDelay=null,uname=null,pword=n
     if (str != null && str.length() > 0 && str.charAt(str.length() - 1) == '/') {
         str = str.substring(0, str.length() - 1);
     }
-	def params = [uri: "${str}/motionCapture.php",contentType: "application/x-www-form-urlencoded"]
+	def params = [uri: "${str}/data/motionCapture.php",contentType: "application/x-www-form-urlencoded"]
 	params['body'] = ["cameraName":cameraName,
 						"cameraUrl":cameraURL
 					]
@@ -169,7 +169,7 @@ def clearOldEvents(daysToKeep=daysToKeepEvents, camera=null){
     if (str != null && str.length() > 0 && str.charAt(str.length() - 1) == '/') {
         str = str.substring(0, str.length() - 1);
     }
-	def params = [uri: "${str}/clearOldEvents.php",contentType: "application/x-www-form-urlencoded"]
+	def params = [uri: "${str}/data/clearOldEvents.php",contentType: "application/x-www-form-urlencoded"]
 	params['body'] = ["daysToKeep":daysToKeep]
 	
 	if(camera!=null && camera!=""){
@@ -191,7 +191,7 @@ def checkForWebserverUpdates(){
         str = str.substring(0, str.length() - 1);
     }
 	if (logEnable) log.debug "attempting Version Get request:"
-	def url = "${str}/versionCheck.php";
+	def url = "${str}/data/versionCheck.php";
 	try {
 		httpGet(url) { resp ->
             if (resp.data){
