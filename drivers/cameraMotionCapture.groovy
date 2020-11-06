@@ -160,7 +160,8 @@ def captureEvent(cameraName,cameraURL,cCount=null,cDelay=null,uname=null,pword=n
 	try {
 		httpPost(params) {}
 	} catch (e) {
-		log.error "something went wrong on captureEvent: $e"
+		// due to long execution time of motionCapture, this post will timeout and always give an error.  to troubleshoot, uncomment the below log.error
+		//log.error "something went wrong on captureEvent: $e"
 	}
 }
 
