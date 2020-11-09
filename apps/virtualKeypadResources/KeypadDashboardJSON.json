@@ -7,7 +7,7 @@
   "colWidth": "",
   "cloudRefresh": 5,
   "hsmPin": "",
-  "hide3dot": true,
+  "hide3dot": false,
   "clockMode": true,
   "gridGap": 8,
   "tiles": [
