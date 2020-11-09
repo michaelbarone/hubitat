@@ -60,11 +60,10 @@ def logsOff(){
 }
 
 def installed() {
-	runIn(5,checkForWebserverUpdates)
 }
 
 def updated() {
-	// cancel schedule
+	// cancel schedules
 	unschedule()
 	// set schedule to clearOldEvents
 	if(daysToKeepEvents>0){
@@ -72,7 +71,8 @@ def updated() {
 	}
 	// set schedule to check webserver for updates
 	schedule("0 22 1/12 ? * * *", checkForWebserverUpdates)
-	
+	// run check now for webserver updates
+	checkForWebserverUpdates()	
 	sendEvent(name: "iFrame", value: "<div style='height: 100%; width: 100%'><iframe src='${webServerURL}' style='height: 100%; width:100%; border: none;'></iframe><div>")
 	clearDetails()
 	if (logEnable) {
