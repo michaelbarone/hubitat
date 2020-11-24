@@ -19,11 +19,12 @@
  * 	 10-01-20	mbarone			added panic button
  * 	 10-08-20	mbarone			command button customization.  choose the command buttons you want child devices created for
  * 	 10-16-20	mbarone			added user defined custom commands (adjusted version down to 0.0.4 to match change history
+ * 	 11-18-20	mbarone			added selected commands can cancel HSM alerts when triggered
  */
  
  def setVersion(){
     state.name = "Virtual Keypad Child"
-	state.version = "0.0.4"
+	state.version = "0.0.5"
 }
 
 definition(
@@ -231,6 +232,9 @@ def pageConfig() {
 						title: "When 'On', HSM alerts will be cancelled when any of the disarm commands are used. Default: On/true"
 						paragraph "Disarm Commands: Custom-Disarm, HSM-disarm, HSM-disarmAll, HSM-disarmRules, any mode or custom command with 'disarm' in the name"
 					
+					paragraph ""
+					input "cancelAlertsOnCommands", "enum", required: false, multiple: true, options: updateButtonOptions(buttonsCustom,buttonsHSMIncluded,buttonsModesIncluded),
+							title: "Specify additional commands that cancel HSM alerts that do not have 'disarm' in the name"
 				}
 				
 			}			

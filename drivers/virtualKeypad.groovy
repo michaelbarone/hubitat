@@ -22,6 +22,8 @@
  * 	 10-05-20	mbarone			added lastCodeName attribute so RM could pick up the changes
  * 	 10-08-20	mbarone			only adds child devices that are selected in the app, will remove child devices that are not selected in the app
  * 	 10-16-20	mbarone			code/comment cleanup
+ * 	 11-18-20	mbarone			added delay to custom re-arm command, if re-arm was not added to the command delay timer it sometimes wouldnt process the arm command as disarm was still executing
+ * 	 11-18-20	mbarone			added selected commands can cancel HSM alerts when triggered
  */
 
 import groovy.json.JsonSlurper
@@ -29,7 +31,7 @@ import groovy.json.JsonOutput
 
 def setVersion(){
     state.name = "Virtual Keypad"
-	state.version = "0.0.7"
+	state.version = "0.0.9"
 } 
  
 metadata {
@@ -102,6 +104,10 @@ def configureSettings(settings){
 				state.cancelAlertsOnDisarm = it.value
 				break
 				
+			case "cancelAlertsOnCommands":
+				state.cancelAlertsOnCommands = it.value
+				break
+				
 			case "availableButtons":
 				state.availableButtons = it.value
 				break	
@@ -149,7 +155,7 @@ def commandMode(action,btn){
 			parent.setMode(state.defaultMode)
 		}
 		// cancel HSM alerts if set and mode has disarm in name
-		if(state.cancelAlertsOnDisarm == true && btn.toLowerCase().contains("disarm")){
+		if(state.cancelAlertsOnDisarm == true && (btn.toLowerCase().contains("disarm") || state.cancelAlertsOnCommands.any{btn.contains(it)})){
 			cancelHSMAlerts()
 		}		
 		if(state.armDelay && state.armDelaySecondsGroup.any{btn.contains(it)}){
@@ -176,7 +182,7 @@ def commandHSM(action,btn){
 	def displayDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
 	if(checkInputCode(btn)){
 		// cancel HSM alerts if set and mode has disarm in name
-		if(state.cancelAlertsOnDisarm == true && btn.toLowerCase().contains("disarm")){
+		if(state.cancelAlertsOnDisarm == true && (btn.toLowerCase().contains("disarm") || state.cancelAlertsOnCommands.any{btn.contains(it)})){
 			cancelHSMAlerts()
 		}	
 		if(state.armDelay && state.armDelaySecondsGroup.any{btn.contains(it)}){
@@ -203,12 +209,15 @@ def commandCustom(action,btn){
 	def displayDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
 	if(checkInputCode(btn)){
 		// cancel HSM alerts if set and mode has disarm in name
-		if(state.cancelAlertsOnDisarm == true && btn.toLowerCase().contains("disarm")){
+		if(state.cancelAlertsOnDisarm == true && (btn.toLowerCase().contains("disarm") || state.cancelAlertsOnCommands.any{btn.contains(it)})){
 			cancelHSMAlerts()
-		}	
+		}
 		if(action=="ReArm"){
 			displayDevice?.updateInputDisplay("Success.  Executing Disarm")
 			getChildDevice("${device.deviceNetworkId}-Custom-Disarm")?.on()
+			if(!state.armDelay || !state.armDelaySecondsGroup.any{btn.contains(it)}){
+				pauseExecution(2000)
+			}
 		}
 		if(state.armDelay && state.armDelaySecondsGroup.any{btn.contains(it)}){
 			def timeLeft = state.armDelaySeconds
