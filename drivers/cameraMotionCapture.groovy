@@ -19,14 +19,15 @@
  *
  *    Date        Who            What
  *    ----        ---            ----
- * 	 11-4-20	mbarone			initial release 
- * 	 11-6-20	mbarone			added lastMotion attributes and versionCheck for webserver version 
+ * 	 20-11-4	mbarone			initial release 
+ * 	 20-11-6	mbarone			added lastMotion attributes and versionCheck for webserver version 
+ * 	 20-11-25	mbarone			added 1s timeout to httpPost so hubitat doesnt hang while processing all camera snapshots
  */
  
  
 def setVersion(){
     state.name = "Camera Motion Capture"
-	state.version = "0.0.2"
+	state.version = "0.0.3"
 } 
  
 metadata {
@@ -37,7 +38,7 @@ metadata {
     preferences {
 		input name: "webServerURL", type: "text", title: "Web Server URL", description: "Full path to the CameraMotionCapture webapp. ie:  http://webserverIP/CameraMotionCapture/", required: true
         input name: "captureCount", type: "number", title: "Capture Frame Count", defaultValue: 5, description: "How many images do you want to save for each motion event"
-        input name: "captureDelay", type: "number", title: "Delay Between Frames", defaultValue: 3, description: "How many seconds between image captures for each motion event"
+        input name: "captureDelay", type: "number", title: "Delay Between Frames", defaultValue: 2, description: "How many seconds between image captures for each motion event"
 		input name: "username", type: "text", title: "Username", description: "Username if cameras require authentication"
 		input name: "password", type: "text", title: "Password", description: "Password if cameras require authentication"
 		input name: "daysToKeepEvents", type: "number", title: "Days to Keep Events", defaultValue: 10, description: "How many days do you want events to be saved for.  To disable, set to 0"
@@ -132,7 +133,10 @@ def captureEvent(cameraName,cameraURL,cCount=null,cDelay=null,uname=null,pword=n
     if (str != null && str.length() > 0 && str.charAt(str.length() - 1) == '/') {
         str = str.substring(0, str.length() - 1);
     }
-	def params = [uri: "${str}/data/motionCapture.php",contentType: "application/x-www-form-urlencoded"]
+	def params = [uri: "${str}/data/motionCapture.php",
+					contentType: "application/x-www-form-urlencoded",
+					timeout: 1
+				]
 	params['body'] = ["cameraName":cameraName,
 						"cameraUrl":cameraURL
 					]
@@ -165,6 +169,7 @@ def captureEvent(cameraName,cameraURL,cCount=null,cDelay=null,uname=null,pword=n
 	if (logEnable) log.debug params
 	try {
 		httpPost(params) {}
+		//asynchttpPost("postCallback", params)
 	} catch (e) {
 		// due to long execution time of motionCapture, this post will timeout and always give an error.  to troubleshoot, uncomment the below log.error
 		//log.error "something went wrong on captureEvent: $e"
@@ -176,7 +181,10 @@ def clearOldEvents(daysToKeep=daysToKeepEvents, camera=null){
     if (str != null && str.length() > 0 && str.charAt(str.length() - 1) == '/') {
         str = str.substring(0, str.length() - 1);
     }
-	def params = [uri: "${str}/data/clearOldEvents.php",contentType: "application/x-www-form-urlencoded"]
+	def params = [uri: "${str}/data/clearOldEvents.php",
+					contentType: "application/x-www-form-urlencoded",
+					timeout: 1
+				]
 	params['body'] = ["daysToKeep":daysToKeep]
 	
 	if(camera!=null && camera!=""){
@@ -187,9 +195,14 @@ def clearOldEvents(daysToKeep=daysToKeepEvents, camera=null){
 	if (logEnable) log.debug params
 	try {
 		httpPost(params) {}
+		//asynchttpPost('postCallback', params)
 	} catch (e) {
-		log.error "something went wrong on clearOldEvents: $e"
+		//log.error "something went wrong on clearOldEvents: $e"
 	}
+}
+
+def postCallback(response, data) {
+    if (logEnable) log.debug "status of post call is: ${response.status}"
 }
 
 def checkForWebserverUpdates(){

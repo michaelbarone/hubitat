@@ -20,12 +20,13 @@
 *
 *    Date        Who            What
 *    ----        ---            ----
-* 	 11-4-20	mbarone			initial release 
+* 	 20-11-4	mbarone			initial release 
+* 	 20-11-25	mbarone			added additional logging
 */
 
 def setVersion(){
     state.name = "Camera Motion Capture Child"
-	state.version = "0.0.1"
+	state.version = "0.0.2"
 }
 
 metadata {
@@ -75,6 +76,7 @@ def initialize() {
 
 def captureEvent(cCount=captureCount,cDelay=captureDelay){
 	def cameraName = getDataValue("cameraName")
+	if (logEnable) log.debug "capture event on: ${cameraName}"
 	parent.captureEvent(cameraName,cameraURL,cCount,cDelay,username,password)
 }
 
