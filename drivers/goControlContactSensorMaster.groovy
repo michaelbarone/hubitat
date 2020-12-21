@@ -365,6 +365,29 @@ private canReportBattery() {
 	return (!state.lastBatteryReport || ((new Date().time) - state.lastBatteryReport > reportEveryMS)) 
 }
 
+def zwaveEvent(hubitat.zwave.commands.batteryv1.BatteryReport cmd)
+{
+    def map = [:]
+
+    map.name = "battery"
+    map.unit = "%"
+    if (cmd.batteryLevel == 0xFF)
+    {
+        map.value = 0
+        map.descriptionText = "${device.displayName}: battery is critically low"
+        sendEvent(map)
+        log.warn "${map.descriptionText}"
+    }
+    else
+    {
+        map.value = cmd.batteryLevel
+        map.descriptionText = "${device.displayName}: battery is ${map.value}${map.unit}"
+        sendEvent(map)
+        if (txtEnable) log.info "${map.descriptionText}"
+    }
+}
+
+/*
 def zwaveEvent(hubitat.zwave.commands.batteryv1.BatteryReport cmd) {
 	logTrace "BatteryReport: $cmd"
 	def val = (cmd.batteryLevel == 0xFF ? 1 : cmd.batteryLevel)
@@ -379,6 +402,7 @@ def zwaveEvent(hubitat.zwave.commands.batteryv1.BatteryReport cmd) {
 
 	return result
 }
+*/
 
 def zwaveEvent(hubitat.zwave.commands.basicv1.BasicReport cmd) {
 	logTrace "BasicReport: $cmd"	

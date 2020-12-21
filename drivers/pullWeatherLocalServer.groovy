@@ -47,6 +47,7 @@ metadata {
 		attribute "dailyTempHigh","number"
 		attribute "dailyTempLow","number"
 		attribute "windSpeed","number"
+		attribute "weatherDescription","string"
 
 		command "removeChildren"
 	}
@@ -68,9 +69,6 @@ def parse(description) {
 
 	//logDebug msg.json.lastUpdate
 
-	def headline = ""
-	def event = ""
-
 	if(state.lastUpdate < msg.json.lastUpdate) {
 	
 		state.lastUpdate = msg.json.lastUpdate
@@ -81,7 +79,9 @@ def parse(description) {
 		//logDebug msg.json.alerts.event
 		//logDebug msg.json.alerts.headline
 		
-		if(msg.json.alerts.event && msg.json.alerts.headline){
+		def headline = "No Current Alert"
+		def event = "No Current Alert"
+		if(msg.json.alerts && msg.json.alerts.event && msg.json.alerts.headline){
 			headline = msg.json.alerts.headline
 			event = msg.json.alerts.event
 		}
@@ -95,21 +95,30 @@ def parse(description) {
 		//logDebug msg.json.current.rh
 		sendEvent(name:"temperature", value:msg.json.current.temp, unit: "°F", displayed: true)
 		sendEvent(name:"humidity", value:msg.json.current.rh, unit: "%", displayed: true)
-		
+		sendEvent(name:"weatherDescription", value:msg.json.current.weather.description, displayed: true)
 		
 		//logDebug msg.json.current.wind_spd
 		sendEvent(name:"windSpeed", value:msg.json.current.wind_spd, unit: "mph", displayed: true)
 		
-		
-		//logDebug msg.json.daily[0].high_temp
-		//logDebug msg.json.daily[0].low_temp
-		
-		sendEvent(name:"dailyTempHigh", value:msg.json.daily[0].high_temp, unit: "°F", displayed: true)
+		sendEvent(name:"dailyTempHigh", value:msg.json.daily[0].max_temp, unit: "°F", displayed: true)
 		sendEvent(name:"dailyTempLow", value:msg.json.daily[0].low_temp, unit: "°F", displayed: true)
 		clearDetails()
 	} else {
 		logDebug "No new data since lastUpdate"
 	}
+}
+
+def updated() {
+	clearDetails()
+	if (logEnable) {
+		log.warn "debug logging enabled..."
+		runIn(1800,logsOff)
+	}
+}
+
+def logsOff(){
+    log.warn "debug logging disabled..."
+    device.updateSetting("logEnable",[value:"false",type:"bool"])
 }
 	
 def refresh(){
@@ -138,10 +147,6 @@ def poll() {
 def noServerResponse(){
 	unschedule(noServerResponse)
 	sendEvent(name:"Details", value:"Stale Data. No Response From Server.")
-}
-
-def updated() {
-	clearDetails()
 }
 
 def clearDetails(){

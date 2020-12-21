@@ -30,6 +30,7 @@ metadata {
 
     preferences {
         input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: true
+        input name: "prependChildDeviceName", type: "text", title: "Prepend text to Child Device Names", defaultValue: ""
 	}
 
 	attribute "Details","string"
@@ -121,24 +122,29 @@ def createVirutalDevice2(deviceName,driver){
 def createVirutalDevice(deviceName,driver,namespace = "hubitat"){
     if (logEnable) log.debug "Creating Child Device "+deviceName
 	
+	def prepend = ""
+	if(prependChildDeviceName && prependChildDeviceName!=""){
+		prepend = prependChildDeviceName+"-"
+	}
+	
 	foundChildDevice = null
-	foundChildDevice = getChildDevice("VDM-${deviceName}")
+	foundChildDevice = getChildDevice("${prepend}${deviceName}")
 
 	if(foundChildDevice=="" || foundChildDevice==null){
 
-		if (logEnable) log.debug "createChildDevice:  Creating Child Device 'VDM-${deviceName}'"
+		if (logEnable) log.debug "createChildDevice:  Creating Child Device '${prepend}${deviceName}'"
 		try {
 			addChildDevice(namespace, driver,
-							"VDM-${deviceName}",
+							"${prepend}${deviceName}",
 							[
 								completedSetup: true, 
-								label: "VDM-${deviceName}", 
+								label: "${prepend}${deviceName}", 
 								isComponent: false, 
-								name: "VDM-${deviceName}"
+								name: "${prepend}${deviceName}"
 							]
 						)
-			if (logEnable) log.debug "createChildDevice: Child Device 'VDM-${deviceName}' created!"
-			sendEvent(name:"Details", value:"VDM-${deviceName} child device created!")
+			if (logEnable) log.debug "createChildDevice: Child Device '${prepend}${deviceName}' created!"
+			sendEvent(name:"Details", value:"${prepend}${deviceName} child device created!")
 			if(namespace!="hubitat"){
 				if(!state.customDrivers) {
 					state.customDrivers = [:]
@@ -155,13 +161,13 @@ def createVirutalDevice(deviceName,driver,namespace = "hubitat"){
 		}
 		catch (e) {
 			log.error "Child device creation failed with error = ${e}"
-			sendEvent(name:"Details", value:"VDM-${deviceName} child device creation failed. Please make sure that the '${driver}' is installed and published with the correct namespace: '${namespace}'.", displayed: true)
+			sendEvent(name:"Details", value:"${prepend}${deviceName} child device creation failed. Please make sure that the '${driver}' is installed and published with the correct namespace: '${namespace}'.", displayed: true)
 			unschedule(clearDetails)
 			runIn(300,clearDetails)			
 		}
 	} else {
-		if (logEnable) log.debug "createChildDevice: Child Device 'VDM-${deviceName}' found! Skipping"
-		sendEvent(name:"Details", value:"VDM-${deviceName} child device already exists.", displayed: true)
+		if (logEnable) log.debug "createChildDevice: Child Device '${prepend}${deviceName}' found! Skipping"
+		sendEvent(name:"Details", value:"${prepend}${deviceName} child device already exists.", displayed: true)
 		unschedule(clearDetails)
 		runIn(300,clearDetails)
 	}
