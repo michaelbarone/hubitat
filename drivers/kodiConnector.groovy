@@ -19,12 +19,13 @@
  *    Date        Who            What
  *    ----        ---            ----
  * 	 9-26-20	mbarone			initial release 
+ * 	 1-04-21	mbarone			updated call functions for non-blocking options for child device calls and added more debug logging (when enabled)
  */
  
  
 def setVersion(){
     state.name = "Kodi Connector"
-	state.version = "0.0.1"
+	state.version = "0.0.2"
 } 
  
 metadata {
@@ -68,9 +69,11 @@ def clearDetails(){
 }
 
 def deviceNotification(message){
+	if (logEnable) log.debug "deviceNotification(${message})"
 	childDevices.each {
 		try{
 			it?.deviceNotification(message)
+			if (logEnable) log.debug "deviceNotification to childDevice ${it}"
 		}
 		catch (e) {
 			if (logEnable) log.debug "Error sending deviceNotification to childDevice ${it.deviceNetworkId}: ${e}"
@@ -79,9 +82,11 @@ def deviceNotification(message){
 }
 
 def viewMotionCameraID(cameraID){
+	if (logEnable) log.debug "viewMotionCameraID(${cameraID})"
 	childDevices.each {
 		try{
 			it?.viewMotionCameraID(cameraID)
+			if (logEnable) log.debug "viewMotionCameraID to childDevice ${it}"
 		}
 		catch (e) {
 			if (logEnable) log.debug "Error sending viewMotionCameraID to childDevice ${it.deviceNetworkId}: ${e}"
@@ -90,9 +95,11 @@ def viewMotionCameraID(cameraID){
 }
 
 def viewMotionCameraDirect(cameraName,cameraURL,cameraUsername="",cameraPassword=""){
+	if (logEnable) log.debug "viewMotionCameraDirect(${cameraName},${cameraURL},${cameraUsername},${cameraPassword})"
 	childDevices.each {
 		try{
-			it?.viewMotionCameraDirect(cameraName,cameraURL,cameraUsername="",cameraPassword="")
+			it?.viewMotionCameraDirect(cameraName,cameraURL,cameraUsername,cameraPassword)
+			if (logEnable) log.debug "viewMotionCameraDirect to childDevice ${it}"
 		}
 		catch (e) {
 			if (logEnable) log.debug "Error sending viewMotionCameraDirect to childDevice ${it.deviceNetworkId}: ${e}"
@@ -101,9 +108,11 @@ def viewMotionCameraDirect(cameraName,cameraURL,cameraUsername="",cameraPassword
 }
 
 def viewAllCameras(){
+	if (logEnable) log.debug "viewAllCameras()"
 	childDevices.each {
 		try{
 			it?.viewAllCameras()
+			if (logEnable) log.debug "viewAllCameras to childDevice ${it}"
 		}
 		catch (e) {
 			if (logEnable) log.debug "Error sending viewAllCameras to childDevice ${it.deviceNetworkId}: ${e}"
@@ -112,9 +121,11 @@ def viewAllCameras(){
 }
 
 def viewAllCamerasDirect(camera1,camera2="",camera3="",camera4="",cameraUsername="",cameraPassword=""){
+	if (logEnable) log.debug "viewAllCamerasDirect(${camera1},${camera2},${camera3},${camera4},${cameraUsername},${cameraPassword})"
 	childDevices.each {
 		try{
-			it?.viewAllCamerasDirect(camera1,camera2="",camera3="",camera4="",cameraUsername="",cameraPassword="")
+			it?.viewAllCamerasDirect(camera1,camera2,camera3,camera4,cameraUsername,cameraPassword)
+			if (logEnable) log.debug "viewAllCamerasDirect to childDevice ${it}"
 		}
 		catch (e) {
 			if (logEnable) log.debug "Error sending viewAllCamerasDirect to childDevice ${it.deviceNetworkId}: ${e}"

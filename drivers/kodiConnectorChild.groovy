@@ -23,11 +23,12 @@
 *    Date        Who            What
 *    ----        ---            ----
 * 	 9-26-20	mbarone			initial release 
+* 	 1-04-21	mbarone			added non-blocking option for hubaction calls to help with sending to multiple child devices at once from parent device 
 */
 
 def setVersion(){
     state.name = "Kodi Connector Child"
-	state.version = "0.0.1"
+	state.version = "0.0.2"
 }
 
 metadata {
@@ -88,10 +89,16 @@ def sendToKODI(content){
     
     //SEND NOTIFICATION
     def result = new hubitat.device.HubAction(
+		[
         method: "POST",
         path: "/jsonrpc",
         body: content,
         headers: myHeaders
+		],
+        "string",
+		[
+		timeout: 1
+		]
 	)
     
     if (logEnable) log.debug result
@@ -136,7 +143,7 @@ def deviceNotification(message){
         "id":1
     ]
 
-	sendToKODI(content)
+	runIn(1, sendToKODI, [data: content])
 }
 
 def viewAllCameras(){
@@ -155,8 +162,8 @@ def viewAllCameras(){
 		"id":1
     ]
 
-	runIn(1,sendClear)
-	return sendToKODI(content)
+	runIn(2,sendClear)
+	runIn(1, sendToKODI, [data: content])
 }
 
 def viewAllCamerasDirect(camera1,camera2="",camera3="",camera4="",cameraUsername="",cameraPassword=""){
@@ -184,8 +191,8 @@ def viewAllCamerasDirect(camera1,camera2="",camera3="",camera4="",cameraUsername
 		"id":1
     ]
 
-	runIn(1,sendClear)
-	return sendToKODI(content)
+	runIn(2,sendClear)
+	runIn(1, sendToKODI, [data: content])
 }
 
 def viewMotionCameraID(cameraID = null){
@@ -208,8 +215,8 @@ def viewMotionCameraID(cameraID = null){
 		"id":1
     ]
 	
-	runIn(1,sendClear)
-	return sendToKODI(content)
+	runIn(2,sendClear)
+	runIn(1, sendToKODI, [data: content])
 }
 
 def viewMotionCameraDirect(cameraName,cameraURL,cameraUsername="",cameraPassword=""){
@@ -235,8 +242,8 @@ def viewMotionCameraDirect(cameraName,cameraURL,cameraUsername="",cameraPassword
 		"id":1
     ]
 
-	runIn(1,sendClear)
-	return sendToKODI(content)
+	runIn(2,sendClear)
+	runIn(1, sendToKODI, [data: content])
 }
 
 def parse(String description) {
