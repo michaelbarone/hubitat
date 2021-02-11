@@ -20,11 +20,12 @@
  * 	 10-08-20	mbarone			command button customization.  choose the command buttons you want child devices created for
  * 	 10-16-20	mbarone			added user defined custom commands (adjusted version down to 0.0.4 to match change history
  * 	 11-18-20	mbarone			added selected commands can cancel HSM alerts when triggered
+ * 	 02-10-21	mbarone			added option for chime child device trigger when waiting on command count down
  */
  
  def setVersion(){
     state.name = "Virtual Keypad Child"
-	state.version = "0.0.5"
+	state.version = "0.0.6"
 }
 
 definition(
@@ -60,7 +61,16 @@ def updated() {
 		if(logEnable) log.debug "Child Keypad Found, applying settings and creating keypad children if needed"
 		theChild.configureSettings(settings)
 	}
+	if(logEnable) {
+		log.warn "debug logging enabled..."
+		runIn(1800,logsOff)
+	}
     if(logEnable) log.debug "Updated with settings: ${settings}"
+}
+
+def logsOff(){
+    log.warn "debug logging disabled..."
+    app.updateSetting("logEnable",[value:"false",type:"bool"])
 }
 
 def initialize() {
@@ -218,6 +228,15 @@ def pageConfig() {
 
 						input "armDelaySecondsGroup", "enum", required: armDelay, multiple: true, options: updateButtonOptions(buttonsCustom,buttonsHSMIncluded,buttonsModesIncluded),
 							title: "What commands do you want to delay before executing?"
+							
+							
+						paragraph "Enable a trigger for a Chime/Tone Device during command Delay Countdowns"	
+						input "chimeDelay", "bool", required: false, defaultValue: false, submitOnChange: true,
+							title: "Turns 'on' the child Chime device to trigger RM to chime/send tone to devices during command delay countdowns. Default: Off/false"
+						if (chimeDelay){
+							input "chimeTiming", "number", required: chimeDelay, defaultValue: 2,
+								title: "Send Chime Trigger every X seconds during countdown"					
+						}
 					}
 					
 					paragraph ""

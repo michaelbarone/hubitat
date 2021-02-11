@@ -15,14 +15,15 @@
  *
  *    Date        Who            What
  *    ----        ---            ----
- * 	 9-26-20	mbarone			initial release
+ * 	 09-26-20	mbarone			initial release
  * 	 10-01-20	mbarone			added panic option with tamper trigger
  * 	 10-16-20	mbarone			bugfix in buttonpress logic
+ * 	 02-10-21	mbarone			changed auto turn off to 500 milliseconds instead of 5 seconds
  */
  
 def setVersion(){
     state.name = "Virtual Keypad Button Child"
-	state.version = "0.0.3"
+	state.version = "0.0.4"
 } 
  
  
@@ -82,7 +83,7 @@ def push(evt) {
 def on() {
 	if (logEnable) log.debug "on() called"
 	sendEvent(name: "switch", value: "on")
-	runIn(5,off)
+	runInMillis(500,off)
 }
 
 def off() {
@@ -93,7 +94,7 @@ def off() {
 def tamperAlert(){
 	if (logEnable) log.debug "tamperAlert() called"
 	sendEvent(name: "tamper", value: "detected", isStateChange  : true)
-	runIn(5,clearTamperAlert)
+	runInMillis(500,clearTamperAlert)
 }
 
 def clearTamperAlert(){

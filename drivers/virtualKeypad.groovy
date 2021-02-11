@@ -24,6 +24,7 @@
  * 	 10-16-20	mbarone			code/comment cleanup
  * 	 11-18-20	mbarone			added delay to custom re-arm command, if re-arm was not added to the command delay timer it sometimes wouldnt process the arm command as disarm was still executing
  * 	 11-18-20	mbarone			added selected commands can cancel HSM alerts when triggered
+ * 	 02-10-21	mbarone			added option to cancel count down timer and include optional chime child device to trigger chimes/etc using RM when countdown is active
  */
 
 import groovy.json.JsonSlurper
@@ -31,7 +32,7 @@ import groovy.json.JsonOutput
 
 def setVersion(){
     state.name = "Virtual Keypad"
-	state.version = "0.0.9"
+	state.version = "0.0.10"
 } 
  
 metadata {
@@ -111,6 +112,14 @@ def configureSettings(settings){
 			case "availableButtons":
 				state.availableButtons = it.value
 				break	
+				
+			case "chimeDelay":
+				state.chimeDelay = it.value
+				break
+				
+			case "chimeTiming":
+				state.chimeTiming = it.value
+				break				
 		}
 	}
 	updated()
@@ -129,6 +138,7 @@ def installed() {
     sendEvent(name:"codeLength",value:4)
 	state.notifyCount = 0
 	state.panicPressCount = 0
+	state.countdownRunning = false
 }
 
 def updated() {
@@ -145,97 +155,43 @@ def updated() {
 		log.warn "debug logging enabled..."
 		runIn(1800,logsOff)
 	}
+	state.countdownRunning = false
 }
 
 def commandMode(action,btn){
 	def displayDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
-	if(checkInputCode(btn)){
-		// set default mode if set
-		if(state.defaultMode != "" && state.defaultModeTrigger.any{btn.contains(it)}){
-			parent.setMode(state.defaultMode)
-		}
-		// cancel HSM alerts if set and mode has disarm in name
-		if(state.cancelAlertsOnDisarm == true && (btn.toLowerCase().contains("disarm") || state.cancelAlertsOnCommands.any{btn.contains(it)})){
-			cancelHSMAlerts()
-		}		
-		if(state.armDelay && state.armDelaySecondsGroup.any{btn.contains(it)}){
-			def timeLeft = state.armDelaySeconds
-			state.armDelaySeconds.times{
-				timeLeft = timeLeft - 1
-				displayDevice?.updateInputDisplay("Setting ${action} in ${timeLeft} seconds")
-				pauseExecution(1000)
-			}
-		}
-		if(state.changeModes){
-			parent.setMode(action)
-		}
-		displayDevice?.updateInputDisplay("Success.  Executing ${action}")
-		def commandChildDevice = getChildDevice("${device.deviceNetworkId}-${btn}")
-		commandChildDevice?.on()
-	} else {
-		displayDevice?.updateInputDisplay("Input Denied")
+	// set default mode if set
+	if(state.defaultMode != "" && state.defaultModeTrigger.any{btn.contains(it)}){
+		parent.setMode(state.defaultMode)
 	}
+	if(state.changeModes){
+		parent.setMode(action)
+	}
+	displayDevice?.updateInputDisplay("Success.  Executing ${action}")
+	def commandChildDevice = getChildDevice("${device.deviceNetworkId}-${btn}")
+	commandChildDevice?.on()
 	timeoutClearCode()
 }
 
 def commandHSM(action,btn){
 	def displayDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
-	if(checkInputCode(btn)){
-		// cancel HSM alerts if set and mode has disarm in name
-		if(state.cancelAlertsOnDisarm == true && (btn.toLowerCase().contains("disarm") || state.cancelAlertsOnCommands.any{btn.contains(it)})){
-			cancelHSMAlerts()
-		}	
-		if(state.armDelay && state.armDelaySecondsGroup.any{btn.contains(it)}){
-			def timeLeft = state.armDelaySeconds
-			state.armDelaySeconds.times{
-				timeLeft = timeLeft - 1
-				displayDevice?.updateInputDisplay("Setting ${action} in ${timeLeft} seconds")
-				pauseExecution(1000)
-			}
-		}
-		if(state.changeHSM){
-			sendLocationEvent(name: "hsmSetArm", value: action, descriptionText: "Keypad Event ${action}")
-		}
-		displayDevice?.updateInputDisplay("Success.  Executing ${action}")
-		def commandChildDevice = getChildDevice("${device.deviceNetworkId}-${btn}")
-		commandChildDevice?.on()
-	} else {
-		displayDevice?.updateInputDisplay("Input Denied")
+	if(state.changeHSM){
+		sendLocationEvent(name: "hsmSetArm", value: action, descriptionText: "Keypad Event ${action}")
 	}
+	displayDevice?.updateInputDisplay("Success.  Executing ${action}")
+	def commandChildDevice = getChildDevice("${device.deviceNetworkId}-${btn}")
+	commandChildDevice?.on()
 	timeoutClearCode()
 }
 
 def commandCustom(action,btn){
 	def displayDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
-	if(checkInputCode(btn)){
-		// cancel HSM alerts if set and mode has disarm in name
-		if(state.cancelAlertsOnDisarm == true && (btn.toLowerCase().contains("disarm") || state.cancelAlertsOnCommands.any{btn.contains(it)})){
-			cancelHSMAlerts()
-		}
-		if(action=="ReArm"){
-			displayDevice?.updateInputDisplay("Success.  Executing Disarm")
-			getChildDevice("${device.deviceNetworkId}-Custom-Disarm")?.on()
-			if(!state.armDelay || !state.armDelaySecondsGroup.any{btn.contains(it)}){
-				pauseExecution(2000)
-			}
-		}
-		if(state.armDelay && state.armDelaySecondsGroup.any{btn.contains(it)}){
-			def timeLeft = state.armDelaySeconds
-			state.armDelaySeconds.times{
-				timeLeft = timeLeft -  1
-				displayDevice?.updateInputDisplay("Setting ${action} in ${timeLeft} seconds")
-				pauseExecution(1000)
-			}
-		}
-		if(action=="ReArm"){
-			displayDevice?.updateInputDisplay("Success.  Executing Arm")
-			getChildDevice("${device.deviceNetworkId}-Custom-Arm")?.on()
-		} else {		
-			displayDevice?.updateInputDisplay("Success.  Executing ${action}")
-			getChildDevice("${device.deviceNetworkId}-${btn}")?.on()
-		}
-	} else {
-		displayDevice?.updateInputDisplay("Input Denied")
+	if(action=="ReArm"){
+		displayDevice?.updateInputDisplay("Success.  Executing Arm")
+		getChildDevice("${device.deviceNetworkId}-Custom-Arm")?.on()
+	} else {		
+		displayDevice?.updateInputDisplay("Success.  Executing ${action}")
+		getChildDevice("${device.deviceNetworkId}-${btn}")?.on()
 	}
 	timeoutClearCode()
 }
@@ -266,16 +222,30 @@ def checkInputCode(btn){
 
 	Object lockCode = lockCodes.find{ it.value.code.toInteger() == state.code.toInteger() }
     if (lockCode){
-        Map data = ["${lockCode.key}":lockCode.value]
-        String descriptionText = "${device.displayName} executed ${btn} by ${lockCode.value.name}"
-        if (txtEnable) log.info "${descriptionText}"
-        //if (optEncrypt) data = encrypt(JsonOutput.toJson(data))
-        //sendEvent(name:"lock",value:"unlocked",descriptionText: descriptionText, type:"physical",data:data, isStateChange: true)
-        sendEvent(name:"lastCodeName", value: lockCode.value.name, descriptionText: descriptionText, isStateChange: true, displayed: true)
-		sendEvent(name:"UserInput", value: "Success", descriptionText: descriptionText + " " + btn, displayed: true)
-		codeAccepted = true
-		if (logEnable) log.debug "${btn} code accepted"
-		state.notifyCount = 0		
+		state.notifyCount = 0			
+		if(state.countdownRunning){
+			String descriptionText = "${device.displayName} executed Cancel Count Down Timer by ${lockCode.value.name}"
+			if (txtEnable) log.info "${descriptionText}"
+			sendEvent(name:"lastCodeName", value: lockCode.value.name, descriptionText: descriptionText, isStateChange: true, displayed: true)
+			sendEvent(name:"UserInput", value: "Success", descriptionText: descriptionText, displayed: true)
+			if (logEnable) log.debug "countdown cancelled code accepted"		
+			state.countdownRunning = false
+			unschedule(countDownTimer)
+			def displayDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
+			displayDevice?.updateInputDisplay("Countdown Cancelled.")
+			timeoutClearCode()
+			return
+		} else {
+			//Map data = ["${lockCode.key}":lockCode.value]
+			//if (optEncrypt) data = encrypt(JsonOutput.toJson(data))
+			//sendEvent(name:"lock",value:"unlocked",descriptionText: descriptionText, type:"physical",data:data, isStateChange: true)
+			String descriptionText = "${device.displayName} executed ${btn} by ${lockCode.value.name}"
+			if (txtEnable) log.info "${descriptionText}"
+			sendEvent(name:"lastCodeName", value: lockCode.value.name, descriptionText: descriptionText, isStateChange: true, displayed: true)
+			sendEvent(name:"UserInput", value: "Success", descriptionText: descriptionText + " " + btn, displayed: true)
+			codeAccepted = true
+			if (logEnable) log.debug "${btn} code accepted"
+		}
     } else {
 		sendEvent(name:"UserInput", value: "Failed", descriptionText: "Code input Failed for ${btn} ("+state.code+")", displayed: true)
 		if (logEnable) log.debug "${btn} code NOT accepted"	
@@ -365,8 +335,10 @@ def buttonPress(btn) {
 		} else {
 			state.codeInput = state.codeInput+"*"
 		}
-		def childDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
-		childDevice?.updateInputDisplay(state.codeInput)
+		if(!state.countdownRunning){
+			def childDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
+			childDevice?.updateInputDisplay(state.codeInput)
+		}
 		unschedule(clearCode)
 		runIn(30,clearCode)
 		unschedule(resetInputDisplay)
@@ -378,8 +350,61 @@ def buttonPress(btn) {
 		return
 	}
 
+	if(checkInputCode(btn)){
+		clearCode()
+	} else {
+		displayDevice?.updateInputDisplay("Input Denied")
+		unschedule(resetInputDisplay)
+		runIn(5,resetInputDisplay)			
+		return
+	}
+	
 	def type = btn.split("-")[-2]
 	def action = btn.split("-")[-1]
+	
+	unschedule(countDownTimer)
+	state.countdownRunning = true
+	countDownTimer(type,action,btn)
+	return
+}
+
+def countDownTimer(type,action,btn,secondsLeft=-1){
+	def displayDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
+	if(secondsLeft==-1){
+		if(action=="ReArm"){
+			displayDevice?.updateInputDisplay("Success.  Executing Disarm")
+			getChildDevice("${device.deviceNetworkId}-Custom-Disarm")?.on()
+			pauseExecution(2000)
+		}
+		if(!state.armDelay || !state.armDelaySecondsGroup.any{btn.contains(it)}){
+		} else {
+			secondsLeft = state.armDelaySeconds
+		}
+	}
+	if(secondsLeft>0){	
+		unschedule(countDownTimer)
+		if(state.countdownRunning){
+			if(state.codeInput.contains("*")){
+				displayDevice?.updateInputDisplay("Setting ${action} in ${secondsLeft} seconds | ${state.codeInput}")
+			} else {
+				displayDevice?.updateInputDisplay("Setting ${action} in ${secondsLeft} seconds")
+			}
+			def timeCheck = secondsLeft/state.chimeTiming
+			if("${timeCheck}".isInteger()){
+				getChildDevice("${device.deviceNetworkId}-Chime")?.on()
+			}
+			secondsLeft = secondsLeft - 1
+			runIn(1,countDownTimer,[data: [type,action,btn,secondsLeft]])
+		}
+		return
+	}
+	
+	state.countdownRunning = false
+
+	if(state.cancelAlertsOnDisarm == true && (btn.toLowerCase().contains("disarm") || state.cancelAlertsOnCommands.any{btn.contains(it)})){
+		cancelHSMAlerts()
+	}
+
 	if(type=="Mode"){
 		if (logEnable) log.debug "button is mode"
 		commandMode(action,btn)
@@ -396,7 +421,7 @@ def buttonPress(btn) {
 		if (logEnable) log.debug "button is Custom"
 		commandCustom(action,btn)
 		return
-	}	
+	}
 }
 
 
@@ -405,10 +430,16 @@ def createChildren(){
 
 	// create all buttons
 	def theCommands = state.availableButtons.clone()
-	theCommands.addAll(["Clear","Number","Panic"])
+	if(state.chimeDelay){
+		theCommands.addAll(["Clear","Number","Panic","Chime"])
+	} else {
+		theCommands.addAll(["Clear","Number","Panic"])
+	}
 	//log.debug theCommands
 	def allButtons = ["InputDisplay"]
 	allButtons.addAll(theCommands)
+	
+
 	
 	// create all buttons
 	theCommands.each {
