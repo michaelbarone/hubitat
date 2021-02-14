@@ -30,7 +30,7 @@ metadata {
 
     preferences {
         input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: true
-        input name: "prependChildDeviceName", type: "text", title: "Prepend text to Child Device Names", defaultValue: ""
+        input name: "prependChildDeviceName", type: "text", title: "Prepend text to Child Device Names (this adds a dash (-) after the prepended text and will result in: textBelow-childDeviceName)", defaultValue: ""
 	}
 
 	attribute "Details","string"
