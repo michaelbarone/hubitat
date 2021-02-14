@@ -159,6 +159,10 @@ def updated() {
 		runIn(1800,logsOff)
 	}
 	state.countdownRunning = false
+	unschedule(clearCode)
+	clearCode()
+	unschedule(resetInputDisplay)
+	resetInputDisplay()	
 }
 
 def commandMode(action,btn){
