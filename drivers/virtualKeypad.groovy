@@ -26,6 +26,7 @@
  * 	 11-18-20	mbarone			added selected commands can cancel HSM alerts when triggered
  * 	 02-10-21	mbarone			added option to cancel count down timer and include optional chime child device to trigger chimes/etc using RM when countdown is active
  * 	 02-13-21	mbarone			bugfix - timer errors out when delay chime is not configured.
+ * 	 02-14-21	mbarone			added preference to customize inputDisplay default text plus bugfix - input display did not give feedback for bad code input.
  */
 
 import groovy.json.JsonSlurper
@@ -33,7 +34,7 @@ import groovy.json.JsonOutput
 
 def setVersion(){
     state.name = "Virtual Keypad"
-	state.version = "0.0.11"
+	state.version = "0.0.12"
 } 
  
 metadata {
@@ -46,6 +47,7 @@ metadata {
 		input name: "optEncrypt", type: "bool", title: "Enable lockCode encryption", defaultValue: false, description: ""
         input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: true
 		input name: "src", type: "text", title: "Keypad Dashboard Url for iFrame",  required: false
+		input name: "InputDisplayDefaultText", type: "text", title: "Default Text to display in Keypad Input Display",  required: true, defaultValue: "Enter Code"
 	}
 
 	attribute "Details","string"
@@ -274,7 +276,7 @@ def clearCode(){
 	if (logEnable) log.debug "clearCode"
 	state.panicPressCount = 0
 	state.code = ""
-	state.codeInput = "Enter Code"
+	state.codeInput = InputDisplayDefaultText
 	//state.codeInput = "HSM: ${location.hsmStatus} | Mode: ${location.mode} &#13; Enter Code"
 }
 
@@ -314,6 +316,7 @@ def cancelHSMAlerts(){
 }
 
 def buttonPress(btn) {
+	def displayDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
 	unschedule(clearPanicCount)
 	unschedule(clearCode)
 	unschedule(resetInputDisplay)
@@ -337,8 +340,7 @@ def buttonPress(btn) {
 			state.codeInput = state.codeInput+"*"
 		}
 		if(!state.countdownRunning){
-			def childDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
-			childDevice?.updateInputDisplay(state.codeInput)
+			displayDevice?.updateInputDisplay(state.codeInput)
 		}
 		unschedule(clearCode)
 		runIn(30,clearCode)
@@ -355,6 +357,8 @@ def buttonPress(btn) {
 		clearCode()
 	} else {
 		displayDevice?.updateInputDisplay("Input Denied")
+		unschedule(clearCode)
+		runIn(5,clearCode)
 		unschedule(resetInputDisplay)
 		runIn(5,resetInputDisplay)			
 		return
