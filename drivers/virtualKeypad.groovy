@@ -25,6 +25,7 @@
  * 	 11-18-20	mbarone			added delay to custom re-arm command, if re-arm was not added to the command delay timer it sometimes wouldnt process the arm command as disarm was still executing
  * 	 11-18-20	mbarone			added selected commands can cancel HSM alerts when triggered
  * 	 02-10-21	mbarone			added option to cancel count down timer and include optional chime child device to trigger chimes/etc using RM when countdown is active
+ * 	 02-13-21	mbarone			bugfix - timer errors out when delay chime is not configured.
  */
 
 import groovy.json.JsonSlurper
@@ -32,7 +33,7 @@ import groovy.json.JsonOutput
 
 def setVersion(){
     state.name = "Virtual Keypad"
-	state.version = "0.0.10"
+	state.version = "0.0.11"
 } 
  
 metadata {
@@ -389,9 +390,11 @@ def countDownTimer(type,action,btn,secondsLeft=-1){
 			} else {
 				displayDevice?.updateInputDisplay("Setting ${action} in ${secondsLeft} seconds")
 			}
-			def timeCheck = secondsLeft/state.chimeTiming
-			if("${timeCheck}".isInteger()){
-				getChildDevice("${device.deviceNetworkId}-Chime")?.on()
+			if(state.chimeDelay){
+				def timeCheck = secondsLeft/state.chimeTiming
+				if("${timeCheck}".isInteger()){
+					getChildDevice("${device.deviceNetworkId}-Chime")?.on()
+				}
 			}
 			secondsLeft = secondsLeft - 1
 			runIn(1,countDownTimer,[data: [type,action,btn,secondsLeft]])
