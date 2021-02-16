@@ -28,6 +28,7 @@
  * 	 02-13-21	mbarone			bugfix - timer errors out when delay chime is not configured.
  * 	 02-14-21	mbarone			added preference to customize inputDisplay default text plus bugfix - input display did not give feedback for bad code input.
  * 	 02-15-21	mbarone			change code timeout to clear faster after bad code input.
+ * 	 02-15-21	mbarone			bugfix - forced setting a standard InputDisplayDefaultText if value is null which was causing issues with users upgrading as it wasnt getting set by default for some reason.
  */
 
 import groovy.json.JsonSlurper
@@ -35,7 +36,7 @@ import groovy.json.JsonOutput
 
 def setVersion(){
     state.name = "Virtual Keypad"
-	state.version = "1.0.13"
+	state.version = "1.0.14"
 } 
  
 metadata {
@@ -146,6 +147,10 @@ def installed() {
 }
 
 def updated() {
+	if(InputDisplayDefaultText == null) {
+		log.info "setting InputDisplayDefaultText as it was previously unset"
+		device.updateSetting("InputDisplayDefaultText",[value:"Enter Code",type:"text"])
+	}
 	createChildren()
 	clearDetails()
 	if(device.currentValue("Keypad") != src){
@@ -161,9 +166,9 @@ def updated() {
 	}
 	state.countdownRunning = false
 	unschedule(clearCode)
-	clearCode()
+	runIn(1,clearCode)
 	unschedule(resetInputDisplay)
-	resetInputDisplay()	
+	runIn(1,resetInputDisplay)
 }
 
 def commandMode(action,btn){
@@ -281,7 +286,12 @@ def clearCode(){
 	if (logEnable) log.debug "clearCode"
 	state.panicPressCount = 0
 	state.code = ""
-	state.codeInput = InputDisplayDefaultText
+	log.debug InputDisplayDefaultText
+	if(InputDisplayDefaultText == null){
+		state.codeInput = "Enter Code"
+	} else {
+		state.codeInput = InputDisplayDefaultText
+	}
 	//state.codeInput = "HSM: ${location.hsmStatus} | Mode: ${location.mode} &#13; Enter Code"
 }
 
