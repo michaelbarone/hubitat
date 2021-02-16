@@ -23,7 +23,6 @@
  */
  
 def setVersion(){
-    state.name = "Virtual Keypad Button Child"
 	state.version = "0.0.5"
 } 
  

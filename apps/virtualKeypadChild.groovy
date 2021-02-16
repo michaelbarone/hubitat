@@ -22,11 +22,12 @@
  * 	 11-18-20	mbarone			added selected commands can cancel HSM alerts when triggered
  * 	 02-10-21	mbarone			added option for chime child device trigger when waiting on command count down
  * 	 02-15-21	mbarone			added option to specify exit commands that get the chime trigger when waiting on command count down
+ * 	 02-16-21	mbarone			added support options to get a summary of versions and keypad settings to help troubleshoot issues
  */
  
  def setVersion(){
     state.name = "Virtual Keypad Child"
-	state.version = "0.0.7"
+	state.version = "0.0.8"
 }
 
 definition(
@@ -49,14 +50,11 @@ def installed() {
 }
 
 def updated() {
+	state.showSupport = false
 	unschedule()
     unsubscribe()
 	initialize()
-	// also defined in pageConfig block
-	app.updateLabel(label)
-	def buttonsCustom = ["Custom-Arm","Custom-ReArm","Custom-Disarm"]
-	def availableButtons = updateButtonOptions(buttonsCustom,buttonsHSMIncluded,buttonsModesIncluded)
-	settings.put("availableButtons",availableButtons)
+	updateSettings()
 	def theChild = getChildDevice(settings.dataName)
 	if(theChild) {
 		if(logEnable) log.debug "Child Keypad Found, applying settings and creating keypad children if needed"
@@ -67,6 +65,14 @@ def updated() {
 		runIn(1800,logsOff)
 	}
     if(logEnable) log.debug "Updated with settings: ${settings}"
+}
+
+def updateSettings(){
+	// also defined in pageConfig block
+	app.updateLabel(label)
+	def buttonsCustom = ["Custom-Arm","Custom-ReArm","Custom-Disarm"]
+	def availableButtons = updateButtonOptions(buttonsCustom,buttonsHSMIncluded,buttonsModesIncluded)
+	settings.put("availableButtons",availableButtons)
 }
 
 def logsOff(){
@@ -113,7 +119,7 @@ def pageConfig() {
 		buttonsModes = buttonsModes.collect { "Mode-$it" }
 		def buttonsHSM = ["armAway", "armHome", "armNight", "disarm", "armRules", "disarmRules", "disarmAll", "armAll", "cancelAlerts"]
 		buttonsHSM = buttonsHSM.collect { "HSM-$it" }
-		// also defined in updated block
+		// also defined in updateSettings block
 		def buttonsCustom = ["Custom-Arm","Custom-ReArm","Custom-Disarm"]
 
 		if(!state.customCommands){
@@ -301,6 +307,19 @@ void appButtonHandler(btn){
 		case "RemoveCustomCommand":
 			state.customCommands.remove(customCommand)
 			break
+			
+		case "ShowSettings":
+			updateSettings()
+			getChildDevice(dataName).setVersion()
+			pauseExecution(250)
+			state.VKDversion = getChildDevice(dataName).getState()?.version
+			state.showSupport = true
+			break
+			
+		case "RefreshDisplay2":
+			state.showSupport = false
+			display2()
+			break
 	}
 }
 
@@ -325,7 +344,7 @@ def updateButtonOptions(buttonsCustom,buttonsHSMIncluded,buttonsModesIncluded){
 def display() {
     setVersion()
     theName = app.label
-    if(theName == null || theName == "") theName = "New Child App"
+    if(theName == null || theName == "") theName = "New Child Keypad App"
     section (getFormat("title", "${state.name} - ${theName}")) {
 		paragraph getFormat("line")
 	}
@@ -334,12 +353,39 @@ def display() {
 def display2() {
 	section() {
 		paragraph getFormat("line")
-		paragraph "<div style='color:#1A77C9;text-align:center;font-size:20px;font-weight:bold'>${state.name} - ${state.version}</div>"
+		paragraph "<div style='color:#1A77C9;text-align:center;font-size:20px;font-weight:bold'>${state.name} - V${state.version}</div>"
+
+		if(getChildDevice(dataName)) {
+			paragraph ""
+			paragraph ""
+			getChildDevice(dataName).setVersion()
+			pauseExecution(250)			
+			state.VKDversion = getChildDevice(dataName).getState()?.version
+			
+			if(state.VKDversion==null){
+				input "RefreshDisplay2--0", "button", title: "Refresh Version info"
+				return
+			}
+			
+			paragraph "<div style='color:#1A77C9;text-align:center;font-size:20px;font-weight:bold'>Virtual Keypad Device - V${state.VKDversion}</div>"
+		
+		
+    		input "ShowSettings--0", "button", title: "Get Settings For Support"
+		
+			if(state.showSupport){
+				def buttonsCustom = ["Custom-Arm","Custom-ReArm","Custom-Disarm"]
+				def availableButtons = updateButtonOptions(buttonsCustom,buttonsHSMIncluded,buttonsModesIncluded)
+				settings.put("availableButtons",availableButtons)
+				pauseExecution(250)
+				paragraph "[${state.name}: V${state.version}, Virtual Keypad Device: V${state.VKDversion}]"
+				paragraph "${settings}"
+			}
+		}
 	}       
 }
 
 def createKeypadChildDevice() {
-    if(logEnable) log.debug "In createKeypadChildDevice (${state.version})"
+    if(logEnable) log.debug "Running createKeypadChildDevice"
     statusMessageD = ""
     if(!getChildDevice(dataName)) {
         if(logEnable) log.debug "In createKeypadChildDevice - Child device not found - Creating device: ${dataName}"
@@ -354,6 +400,7 @@ def createKeypadChildDevice() {
 		}
     } else {
         statusMessageD = "<b>Device Name (${dataName}) already exists.</b>"
+		if(logEnable) log.debug "Keypad Device (${dataName}) already exists."
     }
     return statusMessageD
 }

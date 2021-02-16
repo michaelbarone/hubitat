@@ -30,14 +30,14 @@
  * 	 02-15-21	mbarone			change code timeout to clear faster after bad code input.
  * 	 02-15-21	mbarone			bugfix - forced setting a standard InputDisplayDefaultText if value is null which was causing issues with users upgrading as it wasnt getting set by default for some reason.
  * 	 02-15-21	mbarone			bugfix - properly handle cancel timer function.  cleaned up some associated functions
+ * 	 02-16-21	mbarone			added support options to get a summary of versions and keypad settings to help troubleshoot issues
  */
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 
 def setVersion(){
-    state.name = "Virtual Keypad"
-	state.version = "1.0.15"
+	state.version = "1.0.16"
 } 
  
 metadata {
@@ -141,6 +141,7 @@ def logsOff(){
 }
 
 def installed() {
+	setVersion()
 	clearCode()
 	resetInputDisplay()
     clearDetails()
@@ -152,6 +153,7 @@ def installed() {
 }
 
 def updated() {
+	setVersion()
 	if(InputDisplayDefaultText == null) {
 		log.info "setting InputDisplayDefaultText as it was previously unset"
 		device.updateSetting("InputDisplayDefaultText",[value:"Enter Code",type:"text"])
