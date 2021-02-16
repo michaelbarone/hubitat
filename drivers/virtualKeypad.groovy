@@ -286,7 +286,6 @@ def clearCode(){
 	if (logEnable) log.debug "clearCode"
 	state.panicPressCount = 0
 	state.code = ""
-	log.debug InputDisplayDefaultText
 	if(InputDisplayDefaultText == null){
 		state.codeInput = "Enter Code"
 	} else {
