@@ -22,8 +22,8 @@
 *
 *    Date        Who            What
 *    ----        ---            ----
-* 	 9-26-20	mbarone			initial release 
-* 	 1-04-21	mbarone			added non-blocking option for hubaction calls to help with sending to multiple child devices at once from parent device 
+* 	 20-9-26	mbarone			initial release 
+* 	 21-1-04	mbarone			added non-blocking option for hubaction calls to help with sending to multiple child devices at once from parent device 
 */
 
 def setVersion(){
