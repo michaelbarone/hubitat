@@ -27,6 +27,7 @@
  * 	 02-10-21	mbarone			added option to cancel count down timer and include optional chime child device to trigger chimes/etc using RM when countdown is active
  * 	 02-13-21	mbarone			bugfix - timer errors out when delay chime is not configured.
  * 	 02-14-21	mbarone			added preference to customize inputDisplay default text plus bugfix - input display did not give feedback for bad code input.
+ * 	 02-15-21	mbarone			change code timeout to clear faster after bad code input.
  */
 
 import groovy.json.JsonSlurper
@@ -34,7 +35,7 @@ import groovy.json.JsonOutput
 
 def setVersion(){
     state.name = "Virtual Keypad"
-	state.version = "0.0.12"
+	state.version = "1.0.13"
 } 
  
 metadata {
@@ -362,7 +363,7 @@ def buttonPress(btn) {
 	} else {
 		displayDevice?.updateInputDisplay("Input Denied")
 		unschedule(clearCode)
-		runIn(5,clearCode)
+		clearCode()
 		unschedule(resetInputDisplay)
 		runIn(5,resetInputDisplay)			
 		return
