@@ -21,11 +21,12 @@
  * 	 10-16-20	mbarone			added user defined custom commands (adjusted version down to 0.0.4 to match change history
  * 	 11-18-20	mbarone			added selected commands can cancel HSM alerts when triggered
  * 	 02-10-21	mbarone			added option for chime child device trigger when waiting on command count down
+ * 	 02-15-21	mbarone			added option to specify exit commands that get the chime trigger when waiting on command count down
  */
  
  def setVersion(){
     state.name = "Virtual Keypad Child"
-	state.version = "0.0.6"
+	state.version = "0.0.7"
 }
 
 definition(
@@ -229,11 +230,16 @@ def pageConfig() {
 						input "armDelaySecondsGroup", "enum", required: armDelay, multiple: true, options: updateButtonOptions(buttonsCustom,buttonsHSMIncluded,buttonsModesIncluded),
 							title: "What commands do you want to delay before executing?"
 							
-							
+						paragraph ""
+						paragraph ""	
 						paragraph "Enable a trigger for a Chime/Tone Device during command Delay Countdowns"	
 						input "chimeDelay", "bool", required: false, defaultValue: false, submitOnChange: true,
 							title: "Turns 'on' the child Chime device to trigger RM to chime/send tone to devices during command delay countdowns. Default: Off/false"
 						if (chimeDelay){
+							input "chimeDelayGroup", "enum", required: chimeDelay, multiple: true, options: armDelaySecondsGroup,
+								title: "What delayed commands do you want to have an arming chime played during the countdown?"
+							
+							
 							input "chimeTiming", "number", required: chimeDelay, defaultValue: 2,
 								title: "Send Chime Trigger every X seconds during countdown"					
 						}

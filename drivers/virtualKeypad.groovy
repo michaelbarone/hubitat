@@ -29,6 +29,7 @@
  * 	 02-14-21	mbarone			added preference to customize inputDisplay default text plus bugfix - input display did not give feedback for bad code input.
  * 	 02-15-21	mbarone			change code timeout to clear faster after bad code input.
  * 	 02-15-21	mbarone			bugfix - forced setting a standard InputDisplayDefaultText if value is null which was causing issues with users upgrading as it wasnt getting set by default for some reason.
+ * 	 02-15-21	mbarone			bugfix - properly handle cancel timer function.  cleaned up some associated functions
  */
 
 import groovy.json.JsonSlurper
@@ -36,7 +37,7 @@ import groovy.json.JsonOutput
 
 def setVersion(){
     state.name = "Virtual Keypad"
-	state.version = "1.0.14"
+	state.version = "1.0.15"
 } 
  
 metadata {
@@ -124,7 +125,11 @@ def configureSettings(settings){
 				
 			case "chimeTiming":
 				state.chimeTiming = it.value
-				break				
+				break
+
+			case "chimeDelayGroup":
+				state.chimeDelayGroup = it.value
+				break			
 		}
 	}
 	updated()
@@ -242,12 +247,11 @@ def checkInputCode(btn){
 			sendEvent(name:"lastCodeName", value: lockCode.value.name, descriptionText: descriptionText, isStateChange: true, displayed: true)
 			sendEvent(name:"UserInput", value: "Success", descriptionText: descriptionText, displayed: true)
 			if (logEnable) log.debug "countdown cancelled code accepted"		
-			state.countdownRunning = false
 			unschedule(countDownTimer)
 			def displayDevice = getChildDevice("${device.deviceNetworkId}-InputDisplay")
 			displayDevice?.updateInputDisplay("Countdown Cancelled.")
 			timeoutClearCode()
-			return
+			return true
 		} else {
 			//Map data = ["${lockCode.key}":lockCode.value]
 			//if (optEncrypt) data = encrypt(JsonOutput.toJson(data))
@@ -369,6 +373,10 @@ def buttonPress(btn) {
 
 	if(checkInputCode(btn)){
 		clearCode()
+		if(state.countdownRunning == true){		
+			state.countdownRunning = false
+			return
+		}
 	} else {
 		displayDevice?.updateInputDisplay("Input Denied")
 		unschedule(clearCode)
@@ -402,13 +410,13 @@ def countDownTimer(type,action,btn,secondsLeft=-1){
 	}
 	if(secondsLeft>0){	
 		unschedule(countDownTimer)
-		if(state.countdownRunning){
+		if(state.countdownRunning == true){
 			if(state.codeInput.contains("*")){
 				displayDevice?.updateInputDisplay("Setting ${action} in ${secondsLeft} seconds | ${state.codeInput}")
 			} else {
 				displayDevice?.updateInputDisplay("Setting ${action} in ${secondsLeft} seconds")
 			}
-			if(state.chimeDelay){
+			if(state.chimeDelay && state.chimeDelayGroup.any{btn.contains(it)}){
 				def timeCheck = secondsLeft/state.chimeTiming
 				if("${timeCheck}".isInteger()){
 					getChildDevice("${device.deviceNetworkId}-Chime")?.on()

@@ -19,11 +19,12 @@
  * 	 10-01-20	mbarone			added panic option with tamper trigger
  * 	 10-16-20	mbarone			bugfix in buttonpress logic
  * 	 02-10-21	mbarone			changed auto turn off to 500 milliseconds instead of 5 seconds
+ * 	 02-15-21	mbarone			added ability to press button when this is a chime device and it will trigger the chime on() function to trigger an outside source
  */
  
 def setVersion(){
     state.name = "Virtual Keypad Button Child"
-	state.version = "0.0.4"
+	state.version = "0.0.5"
 } 
  
  
@@ -67,6 +68,8 @@ def push(evt) {
 	} else if(btn == "Panic"){
 		sendEvent(name: "pushed", value: "1", isStateChange  : true)
 		parent.buttonPress("${btn}")
+	} else if(btn == "Chime"){
+		on()		
 	} else if(btn == "Number" || btn == "Button"){
 		if(evt==null){
 			return
