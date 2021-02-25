@@ -7,7 +7,7 @@
       "name": "Virtual Keypad",
       "category": "Security",
       "location": "https://raw.githubusercontent.com/michaelbarone/hubitat/master/packagemanager/packageManifest.json",
-      "description": "Create virtual keypads to control HSM and Mode changes",
+      "description": "Create virtual keypads to control HSM, Mode changes, and other custom commands.  This uses a companion app to more easily setup your virtual keypads. Install/configure instructions are in the '[RELEASE] Virtual Keypad' release thread.",
       "tags": [
         "Alarm Systems",
         "Dashboards",
@@ -20,7 +20,7 @@
       "name": "Virtual Basic Keypad",
       "category": "Security",
       "location": "https://raw.githubusercontent.com/michaelbarone/hubitat/master/packagemanager/virtualBasicKeypadManifest.json",
-      "description": "Create Basic Keypads to help secure HSM changes",
+      "description": "Create Basic Virtual Keypads which mimic hardware keypads that only change HSM.  This virtual device has BASIC functionality and is an ADVANCED setup.  Unless you specifically want this version, use the main 'Virtual Keypad'.  Install/configure instructions are in the '[RELEASE] Virtual Keypad' release thread.",
       "tags": [
         "Alarm Systems",
         "Dashboards",
