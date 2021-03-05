@@ -22,6 +22,11 @@ metadata {
 		capability "Health Check"
 
 		attribute "lastUpdated", "String"
+		attribute "timeAve", "Number"
+		attribute "timeMin", "Number"
+		attribute "timeMax", "Number"
+		attribute "packetsSent", "Number"
+		attribute "packetsLost", "Number"
     }
 
 	preferences {
@@ -34,6 +39,7 @@ def parse(String description) {
 	def parts = description.split(" ")
     def name  = parts.length>0?parts[0].trim():null
     def value = parts.length>1?parts[1].trim():null
+	logDebug "name: "+name+", value:"+value
     if (name && value) {
     	logDebug "name: "+name+", value:"+value
         // Update device
@@ -46,6 +52,25 @@ def parse(String description) {
     else {
     	logDebug "Missing either name or value.  Cannot parse!"
     }
+}
+
+def updateStats(stats){
+	logDebug "$stats"
+	def theseStats = stats.replaceAll("\\[","").replaceAll("\\]","")
+	def parts = theseStats.split(", ")
+	def theseParts
+	parts.each {
+		theseParts = it.split(":")
+		if(["lost","sent"].contains(theseParts[0])){
+			if(theseParts[0]=="lost"){
+				sendEvent(name: "packetsLost", value: theseParts[1], displayed: false)
+			} else {
+				sendEvent(name: "packetsSent", value: theseParts[1], displayed: false)
+			}
+		} else {
+			sendEvent(name: theseParts[0], value: theseParts[1], displayed: false)
+		}
+	}
 }
 
 private logDebug(msg) {

@@ -65,7 +65,7 @@ def parse(description) {
 	
 	msg.json.each {
 		logDebug "item: $it.ip is $it.status"
-		changeChildValue(it.ip, it.status)
+		changeChildValue(it.ip, it.status, it.stats)
 		//cmds
 	}
 }
@@ -117,7 +117,7 @@ private String convertPortToHex(port) {
 }	
 
 
- private void changeChildValue(title, param) {
+ private void changeChildValue(title, param, stats) {
 	logDebug "changeChildValue: "+title+" is "+param
 	def childDevice = null
 	def name = title
@@ -161,6 +161,7 @@ private String convertPortToHex(port) {
 		}
 		if (childDevice != null) {
             childDevice.parse("${deviceType} ${value}")
+			childDevice.updateStats("${stats}")
 		}
 	}
 	catch (e) {
