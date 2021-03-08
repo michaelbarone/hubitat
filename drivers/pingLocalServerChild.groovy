@@ -34,6 +34,18 @@ metadata {
 	}
 }
 
+def updated() {
+	if (settings?.debugOutput || settings?.debugOutput == null) {
+		log.warn "debug logging enabled..."
+		runIn(1800,logsOff)
+	}
+}
+
+def logsOff(){
+    log.warn "debug logging disabled..."
+    device.updateSetting("debugOutput",[value:"false",type:"bool"])
+}
+
 def parse(String description) {
     logDebug "parse(${description}) called"
 	def parts = description.split(" ")
@@ -80,4 +92,5 @@ private logDebug(msg) {
 }
 
 def installed() {
+	updated()
 }

@@ -100,6 +100,15 @@ def poll() {
 
 def updated() {
 	clearDetails()
+	if (settings?.debugOutput || settings?.debugOutput == null) {
+		log.warn "debug logging enabled..."
+		runIn(1800,logsOff)
+	}	
+}
+
+def logsOff(){
+    log.warn "debug logging disabled..."
+    device.updateSetting("debugOutput",[value:"false",type:"bool"])
 }
 
 def clearDetails(){
