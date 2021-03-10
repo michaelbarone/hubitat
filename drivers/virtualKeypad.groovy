@@ -31,19 +31,23 @@
  * 	 02-15-21	mbarone			bugfix - forced setting a standard InputDisplayDefaultText if value is null which was causing issues with users upgrading as it wasnt getting set by default for some reason.
  * 	 02-15-21	mbarone			bugfix - properly handle cancel timer function.  cleaned up some associated functions
  * 	 02-16-21	mbarone			added support options to get a summary of versions and keypad settings to help troubleshoot issues
+ * 	 03-10-21	mbarone			removed the SecurityKeypad capability as this was causing issues when present with the LockCodes capability and is not needed for the functionality of this addon
  */
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 
 def setVersion(){
-	state.version = "1.0.16"
-} 
+	state.version = "1.0.17"
+}
  
 metadata {
 	definition (name: "Virtual Keypad", namespace: "mbarone", author: "mbarone", importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/virtualKeypad.groovy") {
-		capability "Lock Codes"
-		capability "SecurityKeypad"
+		//commented out as this is not required for this addon to function.  It may be wanted by some users, but this causes issues when both the SecurityKeypad and LockCodes capability are enabled which breaks the ability to set lock codes on this device.
+		//enable only if you need for your setup
+		//capability "SecurityKeypad"
+
+		capability "LockCodes"
 	}
 
     preferences {

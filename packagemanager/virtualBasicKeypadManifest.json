@@ -1,11 +1,11 @@
 {
   "packageName": "Virtual Basic Keypad",
   "author": "mbarone",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "minimumHEVersion": "2.1.9",
   "dateReleased": "2020-10-06",
   "communityLink": "https://community.hubitat.com/t/release-virtual-keypad/51825",
-  "releaseNotes": "These are the changes in this version. Please look at the community thread.",
+  "releaseNotes": "This is an advanced setup virtual device.  Please look at the community thread for installation and configuration instructions. https://community.hubitat.com/t/release-virtual-keypad/51825",
   "drivers": [
     {
       "id": "bb26c894-ed10-44c6-96c1-38ac0dfab22f",

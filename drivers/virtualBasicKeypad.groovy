@@ -17,6 +17,7 @@
  *    ----        ---            ----
  * 	 10-06-20	mbarone			initial release 
  * 	 10-06-20	mbarone			added attribute Notifcation, which updates with a bad code input message if enabled.  this can be used to trigger a RM notifcation if you watch this attribute for *changed* 
+ * 	 03-10-21	mbarone			removed the SecurityKeypad capability as this was causing issues when present with the LockCodes capability and is not needed for the functionality of this addon
 */
 
 import groovy.json.JsonSlurper
@@ -24,13 +25,16 @@ import groovy.json.JsonOutput
 
 def setVersion(){
     state.name = "Virtual Basic Keypad"
-	state.version = "0.0.2"
+	state.version = "1.0.3"
 }
 
 metadata {
 	definition (name: "Virtual Basic Keypad", namespace: "mbarone", author: "mbarone", importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/virtualBasicKeypad.groovy") {
-		capability "Lock Codes"
-		capability "SecurityKeypad"
+		//commented out as this is not required for this addon to function.  It may be wanted by some users, but this causes issues when both the SecurityKeypad and LockCodes capability are enabled which breaks the ability to set lock codes on this device.
+		//enable only if you need for your setup
+		//capability "SecurityKeypad"
+
+		capability "LockCodes"
 		capability "PushableButton"
 		capability "Momentary"
 		capability "Actuator"

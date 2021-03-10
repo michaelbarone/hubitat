@@ -1,11 +1,11 @@
 {
   "packageName": "Virtual Keypad",
   "author": "mbarone",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "minimumHEVersion": "2.1.9",
   "dateReleased": "2021-02-14",
   "communityLink": "https://community.hubitat.com/t/release-virtual-keypad/51825",
-  "releaseNotes": "These are the changes in this version. Please look at the community thread.  You will need to open the Keypad Child app and save it for changes to update.",  
+  "releaseNotes": "These are the changes in this version. Please look at the community thread.",  
   "apps": [
     {
       "id": "e41757e7-0cf8-4fbd-bdb8-07f63b9ac51a",
