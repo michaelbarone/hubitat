@@ -47,7 +47,6 @@ metadata {
 }
 
 def installed() {
- 	initialize()
 }
 
 def updated() {
@@ -59,7 +58,6 @@ def updated() {
 	if(cameraName != null){
 		state.lastMotionEventImage = str+"/images/"+getDataValue("cameraName")+"/mostRecent.jpg"
  	}
-	initialize()
 	if (logEnable) {
 		log.warn "debug logging enabled..."
 		runIn(1800,logsOff)

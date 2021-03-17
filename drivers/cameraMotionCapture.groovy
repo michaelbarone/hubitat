@@ -64,14 +64,7 @@ def installed() {
 }
 
 def updated() {
-	// cancel schedules
-	unschedule()
-	// set schedule to clearOldEvents
-	if(daysToKeepEvents>0){
-		schedule("0 5 0 1/1 * ? *", clearOldEvents)
-	}
-	// set schedule to check webserver for updates
-	schedule("0 22 1/12 ? * * *", checkForWebserverUpdates)
+	setSchedules()
 	// run check now for webserver updates
 	checkForWebserverUpdates()	
 	sendEvent(name: "iFrame", value: "<div style='height: 100%; width: 100%'><iframe src='${webServerURL}' style='height: 100%; width:100%; border: none;'></iframe><div>")
@@ -80,6 +73,21 @@ def updated() {
 		log.warn "debug logging enabled..."
 		runIn(1800,logsOff)
 	}
+}
+
+def initialize(){
+	setSchedules()
+}
+
+def setSchedules() {
+	// cancel schedules
+	unschedule()
+	// set schedule to clearOldEvents
+	if(daysToKeepEvents>0){
+		schedule("0 5 0 1/1 * ? *", clearOldEvents)
+	}
+	// set schedule to check webserver for updates
+	schedule("0 22 1/12 ? * * *", checkForWebserverUpdates)
 }
 
 def clearDetails(){
