@@ -22,12 +22,13 @@
  * 	 20-11-4	mbarone			initial release 
  * 	 20-11-6	mbarone			added lastMotion attributes and versionCheck for webserver version 
  * 	 20-11-25	mbarone			added 1s timeout to httpPost so hubitat doesnt hang while processing all camera snapshots
+ * 	 21-03-17	mbarone			updated schedule functions and updated server code for CMC which adds some new features
  */
  
  
 def setVersion(){
     state.name = "Camera Motion Capture"
-	state.version = "0.0.3"
+	state.version = "0.0.4"
 } 
  
 metadata {

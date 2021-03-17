@@ -22,11 +22,12 @@
 *    ----        ---            ----
 * 	 20-11-4	mbarone			initial release 
 * 	 20-11-25	mbarone			added additional logging
+* 	 21-03-17	mbarone			code cleanup
 */
 
 def setVersion(){
     state.name = "Camera Motion Capture Child"
-	state.version = "0.0.2"
+	state.version = "0.0.3"
 }
 
 metadata {
