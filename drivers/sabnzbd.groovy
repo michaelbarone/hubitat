@@ -19,7 +19,7 @@ def setVersion(){
 }
 
 metadata {
-    definition (name: "sabnzbd", namespace: "mbarone", author: "mbarone", importUrl: "") {
+    definition (name: "sabnzbd", namespace: "mbarone", author: "mbarone", importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/sabnzbd.groovy") {
         capability "Actuator"
 		capability "Initialize"
         //capability "Switch"
