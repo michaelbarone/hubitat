@@ -39,8 +39,9 @@ metadata {
 		attribute "mbleft", "String"
 		attribute "timeleft", "String"
 		attribute "version", "String"
-		attribute "lastSabnzbdCheck", "String"
-		attribute "lastSabnzbdUpdate", "String"
+		attribute "lastSABnzbdCheck", "String"
+		attribute "lastSABnzbdUpdate", "String"
+		attribute "stateMessage", "String"
 
         
         command "CheckSABnzbd", null
@@ -107,7 +108,7 @@ def GetSABnzbd() {
 	
 	def nowDay = new Date().format("MMM dd", location.timeZone)
 	def nowTime = new Date().format("h:mm:ss a", location.timeZone)
-	sendEvent(name: "lastSabnzbdCheck", value: nowDay + " at " + nowTime, displayed: false)	
+	sendEvent(name: "lastSABnzbdCheck", value: nowDay + " at " + nowTime, displayed: false)	
     
     def wxURI2 = "http://${ip_addr}:${url_port}/sabnzbd/api?mode=queue&output=json&apikey=${api_key}"
     def toReturn = " "
@@ -131,7 +132,7 @@ def GetSABnzbd() {
 		  def wantedStates = ["diskspacetotal1","diskspace1","diskspacetotal2","diskspace2","have_warnings","last_warning","speedlimit","speed","status","uptime","finish","mb","mbleft","timeleft","version"]
 
 			if (response?.status == 200){
-				sendEvent(name: "lastSabnzbdUpdate", value: nowDay + " at " + nowTime, displayed: false)	
+				sendEvent(name: "lastSABnzbdUpdate", value: nowDay + " at " + nowTime, displayed: false)	
 				wantedStates.each{
 					if (response.data.queue[it].value != null)
 						{
