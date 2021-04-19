@@ -80,8 +80,8 @@ void parse(String toparse){
 }
 
 void initialize(){
-	unschedule()
-    if (autoUpdate) runIn(1, CheckSABnzbd)
+	unschedule(CheckSABnzbd)
+    runIn(1, CheckSABnzbd)
 }
 
 def updated(){
@@ -89,8 +89,8 @@ def updated(){
 		log.warn "debug logging enabled..."
 		runIn(1800,logsOff)
 	}	
-	unschedule()
-    if (autoUpdate) runIn(5, CheckSABnzbd)
+	unschedule(CheckSABnzbd)
+    runIn(3, CheckSABnzbd)
 }
 
 def logsOff(){
