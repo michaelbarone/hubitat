@@ -25,7 +25,19 @@
         "Alarm Systems",
         "Dashboards",
         "Safety & Security"
-      ]	  
-    }
+      ]
+    },
+    {
+      "id": "bx26c894-ed10-44c6-96c1-38ac0daab22f",
+      "name": "SABnzbd",
+      "category": "Integrations",
+      "location": "https://raw.githubusercontent.com/michaelbarone/hubitat/master/packagemanager/SABnzbd.json",
+      "description": "Connect SABnzbd to hubitat",
+      "tags": [
+        "LAN",
+        "Multimedia",
+        "Tools & Utilities"
+      ]
+	}
   ]
 }

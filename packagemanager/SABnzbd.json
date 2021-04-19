@@ -1,0 +1,18 @@
+{
+  "packageName": "SABnzbd",
+  "author": "mbarone",
+  "version": "1.0.1",
+  "minimumHEVersion": "2.1.9",
+  "dateReleased": "2021-4-19",
+  "communityLink": "",
+  "releaseNotes": "Connect with SABnzbd to issue commands or view some data in hubitat",
+  "drivers": [
+    {
+      "id": "bx26c894-ed10-44c6-96c1-38ac0daab22f",
+      "name": "SABnzbd",
+      "namespace": "mbarone",
+      "location": "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/sabnzbd.groovy",
+      "required": true
+    }
+  ]
+}
