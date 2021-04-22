@@ -25,7 +25,7 @@
  *
  */
 
-
+// add built in polling so as to not need hubipoll
  
 
 metadata {
@@ -48,14 +48,20 @@ metadata {
 		attribute "dailyTempLow","number"
 		attribute "windSpeed","number"
 		attribute "weatherDescription","string"
-
-		command "removeChildren"
+		
+		attribute "forecastHighDate","string"
+		attribute "forecastHighTemp","number"
+		attribute "forecastLowDate","string"
+		attribute "forecastLowTemp","number"
+		attribute "forecastNextRainDate","string"
+		attribute "forecastNextRain","number"
 	}
 
 	preferences {
 		input("dest_ip", "text", title: "Server IP", description: "The server with the dashboard app", required: true)
 		input("dest_port", "number", title: "Server Port", description: "The port of the webserver (default 80)", required: true)
         input("dest_folder", "text", title: "Webserver script folder", description: "The subdirectory path for the main dashboard app", required: true)
+		input("forceUpdate", "bool",title: "Force Update even if last update has not changed",defaultValue: false,required: false)
 		input("debugOutput", "bool",title: "Enable debug logging?",defaultValue: false,required: false)
 	}
 }
@@ -69,7 +75,7 @@ def parse(description) {
 
 	//logDebug msg.json.lastUpdate
 
-	if(state.lastUpdate < msg.json.lastUpdate) {
+	if(forceUpdate || state.lastUpdate < msg.json.lastUpdate) {
 	
 		state.lastUpdate = msg.json.lastUpdate
 		
@@ -102,6 +108,37 @@ def parse(description) {
 		
 		sendEvent(name:"dailyTempHigh", value:msg.json.daily[0].max_temp, unit: "°F", displayed: true)
 		sendEvent(name:"dailyTempLow", value:msg.json.daily[0].low_temp, unit: "°F", displayed: true)
+		
+		
+		def forecastHighDate,forecastLowDate,forecastNextRainDate
+		def forecastHighTemp = 0
+		def forecastLowTemp = 200
+		def forecastNextRain = 0
+		if(msg.json.daily.size > 0) {
+			def thisCount = msg.json.daily.size - 1
+			thisCount = thisCount.toInteger()
+			(1..thisCount).each {
+				if(msg.json.daily[it].high_temp > forecastHighTemp){
+					forecastHighTemp = msg.json.daily[it].high_temp
+					forecastHighDate = msg.json.daily[it].datetime
+				}
+				if(msg.json.daily[it].low_temp < forecastLowTemp){
+					forecastLowTemp = msg.json.daily[it].low_temp
+					forecastLowDate = msg.json.daily[it].datetime
+				}
+				if(msg.json.daily[it].precip > 0 && forecastNextRain == 0){
+					forecastNextRainDate = msg.json.daily[it].datetime
+					forecastNextRain = msg.json.daily[it].precip
+				}
+			}
+			sendEvent(name:"forecastHighDate", value:forecastHighDate, displayed: true)
+			sendEvent(name:"forecastHighTemp", value:forecastHighTemp, unit: "°F", displayed: true)
+			sendEvent(name:"forecastLowDate", value:forecastLowDate, displayed: true)
+			sendEvent(name:"forecastLowTemp", value:forecastLowTemp, unit: "°F", displayed: true)
+			sendEvent(name:"forecastNextRainDate", value:forecastNextRainDate, displayed: true)
+			sendEvent(name:"forecastNextRain", value:forecastNextRain, displayed: true)
+		}
+
 		clearDetails()
 	} else {
 		logDebug "No new data since lastUpdate"
@@ -114,11 +151,20 @@ def updated() {
 		log.warn "debug logging enabled..."
 		runIn(1800,logsOff)
 	}
+	if (forceUpdate) {
+		log.warn "force update enabled...  auto disable in 30 minutes"
+		runIn(1800,forceUpdateOff)
+	}	
 }
 
 def logsOff(){
     log.warn "debug logging disabled..."
     device.updateSetting("logEnable",[value:"false",type:"bool"])
+}
+
+def forceUpdateOff(){
+    log.warn "force update disabled..."
+    device.updateSetting("forceUpdate",[value:"false",type:"bool"])	
 }
 	
 def refresh(){
