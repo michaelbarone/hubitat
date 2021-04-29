@@ -27,7 +27,6 @@
  *      for multiple ips:  [{"stats":{"sent":"2","lost":0,"timeMax":0,"timeAve":0},"lastUpdate":1600110413,"ip":"192.168.3.217","status":"on"},{"stats":{"sent":"2","lost":0,"timeMax":0,"timeAve":0},"lastUpdate":1600110414,"ip":"192.168.3.221","status":"on"}]
  *
  *
- *   you will need to setup polling for this device every x minutes to send the request to the webserver and handle the response, which will update the child devices.  this poll can be done through RM or similar or an app like "Simple Polling"
  *
  */
 
@@ -38,6 +37,7 @@ metadata {
 	definition (name: "Ping Local Server", namespace: "mbarone", author: "mbarone", importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/pingLocalServer.groovy") {
 		capability "Polling"
 		capability "Refresh"
+		capability "Initialize"
 		capability "Sensor"
 		
 		attribute "Details","string"
@@ -51,6 +51,7 @@ metadata {
 		input("dest_port", "number", title: "Server Port", description: "The port of the webserver (default 80)", required: true, displayDuringSetup: true)
         input("dest_folder", "text", title: "Webserver script folder", description: "The subdirectory path for the ping script", required: true, displayDuringSetup: true)
 		input("ip_addresses", "text", title: "IP Addresses", description: "IP for each machine you want status updates for.  Comma separated if multiple IPs are set.  IE:  192.168.1.50,192.168.1.20", required: true, displayDuringSetup: true)
+		input("delayCheck", "number", title:"Number of seconds between pings", description: "", required: true, displayDuringSetup: true, defaultValue: "300")
 		input("debugOutput", "bool",title: "Enable debug logging?",defaultValue: false,displayDuringSetup: true,required: false)
 	}
 }
@@ -68,10 +69,18 @@ def parse(description) {
 		changeChildValue(it.ip, it.status, it.stats)
 		//cmds
 	}
+	unschedule(poll)
+	runIn(delayCheck.toInteger(), poll)	
 }
-	
+
+void initialize(){
+	unschedule(poll)
+    runIn(10, poll)
+}
+
 def refresh(){
-	poll()
+	unschedule(poll)
+    runIn(1, poll)
 }
 
 def poll() {
@@ -103,7 +112,9 @@ def updated() {
 	if (settings?.debugOutput || settings?.debugOutput == null) {
 		log.warn "debug logging enabled..."
 		runIn(1800,logsOff)
-	}	
+	}
+	unschedule(poll)
+	runIn(delayCheck.toInteger(), poll)
 }
 
 def logsOff(){

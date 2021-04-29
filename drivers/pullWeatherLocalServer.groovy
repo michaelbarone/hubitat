@@ -21,17 +21,15 @@
  *
  *   this app gets the weather.json that is created by the homedashboard webserver app and brings some data into hubitat child devices
  *
- *   you will need to setup polling for this device every x minutes to send the request to the webserver and handle the response, which will update the child devices.  this poll can be done through RM or similar or an app like "Simple Polling"
  *
  */
 
-// add built in polling so as to not need hubipoll
- 
 
 metadata {
 	definition (name: "Pull Weather Local Server", namespace: "mbarone", author: "mbarone", importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/pullWeatherLocalServer.groovy") {
 		capability "Polling"
 		capability "Refresh"
+		capability "Initialize"
 		capability "Sensor"
 		capability "TemperatureMeasurement"
 		capability "RelativeHumidityMeasurement"
@@ -62,6 +60,7 @@ metadata {
 		input("dest_port", "number", title: "Server Port", description: "The port of the webserver (default 80)", required: true)
         input("dest_folder", "text", title: "Webserver script folder", description: "The subdirectory path for the main dashboard app", required: true)
 		input("forceUpdate", "bool",title: "Force Update even if last update has not changed",defaultValue: false,required: false)
+		input("delayCheck", "number", title:"Number of seconds between pings", description: "", required: true, displayDuringSetup: true, defaultValue: "600")
 		input("debugOutput", "bool",title: "Enable debug logging?",defaultValue: false,required: false)
 	}
 }
@@ -143,6 +142,8 @@ def parse(description) {
 	} else {
 		logDebug "No new data since lastUpdate"
 	}
+	unschedule(poll)
+	runIn(delayCheck.toInteger(), poll)
 }
 
 def updated() {
@@ -154,7 +155,9 @@ def updated() {
 	if (forceUpdate) {
 		log.warn "force update enabled...  auto disable in 30 minutes"
 		runIn(1800,forceUpdateOff)
-	}	
+	}
+	unschedule(poll)
+	runIn(5, poll)	
 }
 
 def logsOff(){
@@ -167,8 +170,14 @@ def forceUpdateOff(){
     device.updateSetting("forceUpdate",[value:"false",type:"bool"])	
 }
 	
+void initialize(){
+	unschedule(poll)
+    runIn(10, poll)
+}
+
 def refresh(){
-	poll()
+	unschedule(poll)
+    runIn(1, poll)
 }
 
 def poll() {
