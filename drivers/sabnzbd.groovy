@@ -94,6 +94,10 @@ def updated(){
     runIn(3, CheckSABnzbd)
 }
 
+void uninstalled(){
+	unschedule()
+}
+
 def logsOff(){
     log.warn "debug logging disabled..."
     device.updateSetting("logEnable",[value:"false",type:"bool"])

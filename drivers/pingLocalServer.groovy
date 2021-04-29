@@ -78,6 +78,10 @@ void initialize(){
     runIn(10, poll)
 }
 
+void uninstalled(){
+	unschedule()
+}
+
 def refresh(){
 	unschedule(poll)
     runIn(1, poll)

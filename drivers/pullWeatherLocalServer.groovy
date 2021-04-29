@@ -165,6 +165,10 @@ def logsOff(){
     device.updateSetting("logEnable",[value:"false",type:"bool"])
 }
 
+void uninstalled(){
+	unschedule()
+}
+
 def forceUpdateOff(){
     log.warn "force update disabled..."
     device.updateSetting("forceUpdate",[value:"false",type:"bool"])	
