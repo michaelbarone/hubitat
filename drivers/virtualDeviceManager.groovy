@@ -72,6 +72,8 @@ metadata {
 									]									
 
 	command "createCustomVirtualDevice", [[name:"Device Name*",type:"STRING"],[name:"Device Driver*",type:"STRING"],[name:"Driver Namespace*",type:"STRING"]]
+	
+	command "removeChildDevice", [[name:"Device ID*",type:"STRING"]]
 }
 
 def logsOff(){
@@ -90,6 +92,22 @@ def uninstalled() {
 private removeChildDevices(delete) {
 	log.degub "Removing all child devices"
 	delete.each {deleteChildDevice(it.deviceNetworkId)}
+}
+
+private removeChildDevice(deviceID){
+	def foundChildDevice = null
+	foundChildDevice = getChildDevice("${deviceID}")
+
+	if(foundChildDevice != null){
+		deleteChildDevice("${deviceID}")
+		sendEvent(name:"Details", value:"${deviceID} child device has been deleted.", displayed: true)
+		unschedule(clearDetails)
+		runIn(300,clearDetails)
+	} else {
+		sendEvent(name:"Details", value:"Could not find a device with ID (${deviceID}) to delete", displayed: true)
+		unschedule(clearDetails)
+		runIn(300,clearDetails)	
+	}
 }
 
 def updated() {

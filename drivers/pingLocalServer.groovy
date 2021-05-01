@@ -58,6 +58,8 @@ metadata {
 
 
 def parse(description) {
+	unschedule(poll)
+	runIn(delayCheck.toInteger(), poll)
     logDebug "parse starting"
     def msg = parseLanMessage(description)
 	logDebug msg.json
@@ -69,8 +71,6 @@ def parse(description) {
 		changeChildValue(it.ip, it.status, it.stats)
 		//cmds
 	}
-	unschedule(poll)
-	runIn(delayCheck.toInteger(), poll)	
 }
 
 void initialize(){

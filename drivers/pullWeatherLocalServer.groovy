@@ -68,11 +68,11 @@ metadata {
 
 def parse(description) {
 	unschedule(noServerResponse)
+	unschedule(poll)
+	runIn(delayCheck.toInteger(), poll)
+
     logDebug "parse starting"
     def msg = parseLanMessage(description)
-	//logDebug msg.json
-
-	//logDebug msg.json.lastUpdate
 
 	if(forceUpdate || state.lastUpdate < msg.json.lastUpdate) {
 	
@@ -142,8 +142,6 @@ def parse(description) {
 	} else {
 		logDebug "No new data since lastUpdate"
 	}
-	unschedule(poll)
-	runIn(delayCheck.toInteger(), poll)
 }
 
 def updated() {
