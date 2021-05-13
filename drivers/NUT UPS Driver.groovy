@@ -26,8 +26,8 @@ metadata {
 	capability "Refresh"
 	}
 	
-	attribute "State", "String"
-	attribute "ConnectionStatus", "String"
+	attribute "State", "string"
+	attribute "ConnectionStatus", "string"
 
 	preferences {
         input name: "nutServerHost", type: "text", description: "IP or hostname of NUT server", title: "NUT server hostname"
@@ -129,8 +129,10 @@ def parseVAR(String[] msg) {
 }
 
 def parseOK(String[] msg) {
-	displayDebugLog(device.currentState("State", true).value)
-	switch(device.currentState("State", true).value) {
+	displayDebugLog("parseOK \"${msg}\"")
+	def Value = device.currentState("State", true).value
+	displayDebugLog("State: " + Value)
+	switch(Value) {
 		case STATE_AUTH_PHASE1:
 			nutAuthPhase2()
 			break
@@ -145,8 +147,9 @@ def parseOK(String[] msg) {
 def telnetStatus(String status){
 	log.error("telnetStatus: ${status}")
 	setState(STATE_NETWORKERROR, status)
-
-	if(device.currentState("ConnectionStatus", true).value!="Connected"){
+	def Value = device.currentState("ConnectionStatus", true).value
+	displayDebugLog("telnetStatus() - ConnectionStatus: " + Value)	
+	if(Value!="Connected"){
 		initialize()
 	}
 }
@@ -154,7 +157,10 @@ def telnetStatus(String status){
 def refresh() {
 	setState(STATE_REFRESH)
 	unschedule(refresh)
-	if(device.currentState("ConnectionStatus", true).value=="Connected"){
+	def Value = device.currentState("ConnectionStatus", true).value
+	displayDebugLog("refresh() - ConnectionStatus: " + Value)	
+	if(Value=="Connected"){
+		displayDebugLog("refreshing child devices")	
 	
 		getChildDevices()?.each {
 			it.refresh()
@@ -177,42 +183,29 @@ def initialize(){
 	telnetClose()
 	sendEvent([ name: "ConnectionStatus", value: "Disconnected" ])
 
-	unschedule(refresh)
-	unschedule(connectToServer)
+	unschedule()
 	runIn(1, connectToServer)
 }
 
 def connectToServer() {
+	unschedule(connectToServer)
 	displayDebugLog("connectToServer")
 	
 	if (nutServerHost != null && nutServerPort != null) {
 		log.info "Opening telnet connection"
 		setState(STATE_CONNECTING)
 		connected = false
-		//while(connected == false){
-		    try {
-				telnetConnect([termChars:[10]], nutServerHost, nutServerPort.toInteger(), null, null)
-				connected = true
-		    } catch(Exception ex) {
-				connected = false
-				log.error("Error thrown connecting")
-				log.error(ex)
-				runIn(nutReconnectDelay*1000, initialize)
-				//pauseExecution(nutReconnectDelay*1000)
-				//initialize()
-				return
-		    }
-		//}
+		try {
+			telnetConnect([termChars:[10]], nutServerHost, nutServerPort.toInteger(), null, null)
+			connected = true
+		} catch(Exception ex) {
+			connected = false
+			log.error("Error thrown connecting")
+			log.error(ex)
+			runIn(nutReconnectDelay*1000, initialize)
+			return
+		}
         runIn(1, delayAuthCheck)
-        /*
-		pauseExecution(1000)
-		if (isAuthRequired()) {
-			nutAuthPhase1()
-		}
-		else {
-			nutListUPS()
-		}
-        */
 	} else {
 		log.error "NUT server proprties not set"
 	}
@@ -221,8 +214,7 @@ def connectToServer() {
 def delayAuthCheck(){
 	if (isAuthRequired()) {
         nutAuthPhase1()
-	}
-	else {
+	} else {
 		nutListUPS()
 	}    
 }
@@ -266,8 +258,17 @@ def installed(){
 }
 
 def updated(){
+	if (settings?.logEnable || settings?.logEnable == null) {
+		log.warn "debug logging enabled..."
+		runIn(1800,logsOff)
+	}
 	initialize()
 }
+
+def logsOff(){
+    log.warn "debug logging disabled..."
+    device.updateSetting("logEnable",[value:"false",type:"bool"])
+}	
 
 def getUPSDNID(String id) {
 	return "${device.deviceNetworkId}-${id}"
