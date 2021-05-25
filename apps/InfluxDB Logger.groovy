@@ -533,6 +533,12 @@ def handleEvent(evt) {
         valueBinary = ('touched' == evt.value) ? '1i' : '0i'
         data += ",unit=${unit} value=${value},valueBinary=${valueBinary}"
     }
+    else if ('valve' == evt.name) { // valve: Calculate a binary value (closed = 1, open = 0)
+        unit = 'valve'
+        value = '"' + value + '"'
+        valueBinary = ('closed' == evt.value) ? '1i' : '0i'
+        data += ",unit=${unit} value=${value},valueBinary=${valueBinary}"
+    }
     else if ('water' == evt.name) { // water: Calculate a binary value (wet = 1, dry = 0)
         unit = 'water'
         value = '"' + value + '"'
