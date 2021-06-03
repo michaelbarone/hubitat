@@ -72,6 +72,7 @@ def parse(description) {
 		changeChildValue(it.ip, it.status, it.stats)
 		//cmds
 	}
+	clearDetails()
 }
 
 void initialize(){
@@ -111,7 +112,8 @@ def poll() {
     //hubAction
 	unschedule(noServerResponse)
 	runIn(10,noServerResponse)
-	runIn(delayCheck.toInteger(), poll)	
+	runIn(delayCheck.toInteger(), poll)
+	sendHubCommand(hubAction)
 }
 
 def noServerResponse(){
