@@ -58,6 +58,7 @@ metadata {
 
 
 def parse(description) {
+	unschedule(noServerResponse)
 	unschedule(poll)
 	runIn(delayCheck.toInteger(), poll)
     logDebug "parse starting"
@@ -108,7 +109,16 @@ def poll() {
     logDebug "hubaction is: " + hubAction
     
     //hubAction
-	sendHubCommand(hubAction)
+	unschedule(noServerResponse)
+	runIn(10,noServerResponse)
+	runIn(delayCheck.toInteger(), poll)	
+}
+
+def noServerResponse(){
+	unschedule(noServerResponse)
+	sendEvent(name:"Details", value:"Stale Data. No Response From Server.")
+	unschedule(poll)
+	runIn(delayCheck.toInteger(), poll)	
 }
 
 def updated() {
