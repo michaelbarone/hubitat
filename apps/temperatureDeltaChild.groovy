@@ -76,6 +76,7 @@ def initialize() {
 }
 
 def uninstalled() {
+	unsubscribe()
 	removeChildDevices(getChildDevices())
 }
 
