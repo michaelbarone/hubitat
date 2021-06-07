@@ -551,6 +551,9 @@ def handleEvent(evt) {
         valueBinary = ('closed' == evt.value) ? '1i' : '0i'
         data += ",unit=${unit} value=${value},valueBinary=${valueBinary}"
     }
+	else if ('temperature' == evt.name) {
+		 data += ",unit=${unit} value=${value}"
+	}
     // Catch any other event with a string value that hasn't been handled:
     //else if (evt.value ==~ /.*[^0-9\.,-].*/) { // match if any characters are not digits, period, comma, or hyphen.
     else if (evt.value ==~ /.*[^0-9\.,].*/) { // match if any characters are not digits, period, or comma.
