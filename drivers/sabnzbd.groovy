@@ -12,10 +12,16 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ *  Change History:
+ *
+ *    Date        Who            What
+ *    ----        ---            ----
+ * 	 6-9-21		mbarone			initial release 
+ * 	 6-9-21		mbarone			resolved nullpointerexception
  */
 
 def setVersion(){
-	state.version = "1.0.1"
+	state.version = "1.0.2"
 }
 
 metadata {
@@ -138,7 +144,7 @@ def GetSABnzbd() {
 			if (response?.status == 200){
 				sendEvent(name: "lastSABnzbdUpdate", value: nowDay + " at " + nowTime, displayed: false)	
 				wantedStates.each{
-					if (response.data.queue[it].value != null)
+					if (response.data.queue[it]?.value && response.data.queue[it]?.value != null)
 						{
 							sendEvent(name: it, value: response.data.queue[it].value.toString())
 						} else {
@@ -147,6 +153,7 @@ def GetSABnzbd() {
 				}
 				toReturn = response.data.toString()
 				sendEvent(name: "stateMessage", value: "none")
+				sendEvent(name: "presence", value: "present")
 			}
 			else
 			{
@@ -155,7 +162,6 @@ def GetSABnzbd() {
 				// set default status for values
 				SabnzbdNotResponding()
 			}
-			sendEvent(name: "presence", value: "present")
 		}
     } catch (Exception e){
         log.info e
