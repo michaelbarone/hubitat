@@ -28,16 +28,16 @@
  *			display:none;
  *		}
  *
- *      After loading the dashboard, the javascript file should get appended to the bottom of the dashboard iframe, and your script should be available on the page.
+ *      After loading the dashboard, the JavaScript file should get appended to the bottom of the dashboard iframe, and your script should be available on the page.
  *
- *      each javascript injector device should only be included 1 time for each dashboard.  If you want multiple javascript files to load, create multiple injector devices
+ *      Each JavaScript injector device should only be included 1 time for each dashboard.  If you want multiple JavaScript files to load, create multiple injector devices
  *
  *
  *  Change History:
  *
  *    Date            Who            What
  *    ----            ---            ----
- * 	 6-25-2021  	mbarone			initial release 
+ *  6-25-2021       mbarone		initial release 
  */
 
 preferences {
