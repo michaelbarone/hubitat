@@ -7,7 +7,13 @@
             console.log("JavaScript has been injected!  The script was stopped because it was injected into the device/edit page.  This should work on a dashboard.")
             // stop execution if we are on the device edit page, and not a dashboard.
             return;
-        }        
+        }
+        /************************************/
+        /* Add custom JavaScript below here */
+        /************************************/
+
+
+
         
         
         /* remove specific words from tile titles */
