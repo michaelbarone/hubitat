@@ -115,12 +115,20 @@ def CheckSABnzbd() {
 }
 
 def GetSABnzbd() {
+	unschedule(CheckSABnzbd)
+	runIn(delayCheck.toInteger()*60, CheckSABnzbd)
+
 	
 	def nowDay = new Date().format("MMM dd", location.timeZone)
 	def nowTime = new Date().format("h:mm:ss a", location.timeZone)
 	sendEvent(name: "lastSABnzbdCheck", value: nowDay + " at " + nowTime, displayed: false)	
     
-    def wxURI2 = "http://${ip_addr}:${url_port}/sabnzbd/api?mode=queue&output=json&apikey=${api_key}"
+    
+	
+	//def wxURI2 = "http://${ip_addr}:${url_port}/sabnzbd/api?mode=fullstatus&output=json&apikey=${api_key}"
+	
+	
+	def wxURI2 = "http://${ip_addr}:${url_port}/sabnzbd/api?mode=queue&output=json&apikey=${api_key}"
     def toReturn = " "
         
     def requestParams2 =
@@ -139,9 +147,8 @@ def GetSABnzbd() {
 		httpGet(requestParams2)
 		{
 		  response ->
-		  def wantedStates = ["diskspacetotal1","diskspace1","diskspacetotal2","diskspace2","have_warnings","last_warning","speedlimit","speed","status","uptime","finish","mb","mbleft","timeleft","version"]
-
 			if (response?.status == 200){
+				def wantedStates = ["diskspacetotal1","diskspace1","diskspacetotal2","diskspace2","have_warnings","last_warning","speedlimit","speed","status","uptime","finish","mb","mbleft","timeleft","version"]
 				sendEvent(name: "lastSABnzbdUpdate", value: nowDay + " at " + nowTime, displayed: false)	
 				wantedStates.each{
 					if (response.data.queue[it]?.value && response.data.queue[it]?.value != null)
@@ -171,9 +178,6 @@ def GetSABnzbd() {
 		// set default status for values
 		SabnzbdNotResponding()
     }
-
-	unschedule(CheckSABnzbd)
-	runIn(delayCheck.toInteger()*60, CheckSABnzbd)
     return toReturn
 }
 
