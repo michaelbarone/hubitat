@@ -32,13 +32,14 @@
  * 	 02-15-21	mbarone			bugfix - properly handle cancel timer function.  cleaned up some associated functions
  * 	 02-16-21	mbarone			added support options to get a summary of versions and keypad settings to help troubleshoot issues
  * 	 03-10-21	mbarone			removed the SecurityKeypad capability as this was causing issues when present with the LockCodes capability and is not needed for the functionality of this addon
+ * 	 07-02-21	mbarone			Added new "button" attribute, which adds a button to a dashboard which will show the keypad iframe after clicking, this saves dashboard real estate when not using the keypad
  */
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 
 def setVersion(){
-	state.version = "1.0.17"
+	state.version = "1.0.18"
 }
  
 metadata {
@@ -55,11 +56,21 @@ metadata {
         input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: true
 		input name: "src", type: "text", title: "Keypad Dashboard Url for iFrame",  required: false
 		input name: "InputDisplayDefaultText", type: "text", title: "Default Text to display in Keypad Input Display",  required: true, defaultValue: "Enter Code"
+
+		input name: "text", type: "text", title: "Set remaining preferences for Dashboard Button to hide/show keypad on dashbaords"
+
+        input("openText", "text", title: "Button text to Open Keypad iFrame", defaultValue:"Keypad",  required: false)
+        input("closeText", "text", title: "Button text to close Keypad iFrame", defaultValue:"Close", required: false)
+        input("refreshText", "text", title: "Button text to refresh Keypad iFrame", defaultValue:"Refresh", required: false)
+		input("keypadWidth", "number", title: "Width of keypad when in view as a percentage (default: 50)", defaultValue:50, required: false)
+		input("keypadHeight", "number", title: "Height of keypad when in view as a percentage (default: 100)", defaultValue:100, required: false)
+		input("AutoCloseDelay", "number", title: "Number of seconds to automatically close the Keypad after opening it with dashboard button (default: 60)", defaultValue:60, required: false)
 	}
 
 	attribute "Details","string"
 	attribute "lastCodeName","string"
 	attribute "Keypad", "text"
+	attribute "Button", "text"
 }
 
 def configureSettings(settings){
@@ -171,6 +182,15 @@ def updated() {
 			sendEvent(name: "Keypad", value: "")
 		}
 	}
+
+
+	//sendEvent(name: "Button", value: "<button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='block';>${openText}</button><div id=${device.displayName.replaceAll('\\s','')} class='modal' style='display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:100;background-color:rgba(0,0,0,.85);'><button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='none'; style='float:right;margin:5px;'>${closeText}</button><button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}-iframe').src='${src}'; style='float:right;margin:5px;'>${refreshText}</button><iframe id='${device.displayName.replaceAll('\\s','')}-iframe' src=${src} style='height:${keypadHeight};width:${keypadWidth};border:none;left:0;position:absolute;'></iframe></div>")
+	if(keypadWidth>90){
+		sendEvent(name: "Button", value: "<button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='block';setTimeout(function(){document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='none'},${AutoCloseDelay}000);>${openText}</button><div id=${device.displayName.replaceAll('\\s','')} class='modal' style='display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:100;background-color:rgba(0,0,0,.85);'><button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='none'; style='float:right;margin:5px;'>${closeText}</button><button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}-iframe').src='${src}'; style='float:right;margin:5px;'>${refreshText}</button><iframe id='${device.displayName.replaceAll('\\s','')}-iframe' src=${src} style='height:95%;width:${keypadWidth}%;border:none;'></iframe></div>")
+	} else {
+		sendEvent(name: "Button", value: "<button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='block';setTimeout(function(){document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='none'},${AutoCloseDelay}000);>${openText}</button><div id=${device.displayName.replaceAll('\\s','')} class='modal' style='display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:100;background-color:rgba(0,0,0,.85);'><button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='none'; style='float:right;margin:5px;'>${closeText}</button><button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}-iframe').src='${src}'; style='float:right;margin:5px;'>${refreshText}</button><iframe id='${device.displayName.replaceAll('\\s','')}-iframe' src=${src} style='height:${keypadHeight}%;width:${keypadWidth}%;border:none;left:0;position:absolute;'></iframe></div>")
+	}
+
 	if (logEnable) {
 		log.warn "debug logging enabled..."
 		runIn(1800,logsOff)
