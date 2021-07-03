@@ -38,6 +38,18 @@
         "Multimedia",
         "Tools & Utilities"
       ]
-	}
-  ]
+	},
+  {
+    "id": "bz26a894-gd10-44c6-96a1-38ac0daab22f",
+    "name": "iFrameAdvanced",
+    "category": "Integrations",
+    "location": "https://raw.githubusercontent.com/michaelbarone/hubitat/master/packagemanager/iFrameAdvanced.json",
+    "description": "Use iFrame content several ways on your dashboards",
+    "tags": [
+      "LAN",
+      "Multimedia",
+      "Tools & Utilities"
+    ]
+  }
+ ]
 }

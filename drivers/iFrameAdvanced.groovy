@@ -34,22 +34,29 @@
  *
  *  Change History:
  *
- *    Date        Who            What
- *    ----        ---            ----
- * 	 6-11-21	mbarone			initial release 
+ *    Date            Who            What
+ *    ----            ---            ----
+ * 	 07-02-2021 	mbarone			initial release 
  */
+
+def setVersion(){
+	state.version = "1.0.1"
+}
 
 preferences {
         input("src", "text", title: "iFrame Url",  required: true)
-        input("basicOrAdvanced", "bool", title: "Off = basic  ---  On = Advanced", defaultValue:false,  required: true)
         input("openText", "text", title: "Button text to Open iFrame", defaultValue:"Show",  required: false)
         input("closeText", "text", title: "Button text to close iFrame", defaultValue:"Close", required: false)
         input("refreshText", "text", title: "Button text to refresh iFrame content", defaultValue:"Refresh", required: false)
+		input("width", "number", title: "Width of iFrame when in view as a percentage (default: 100)", defaultValue:100, required: false)
+		input("height", "number", title: "Height of iFrame when in view as a percentage (default: 100)", defaultValue:100, required: false)
+        input("delayLoad", "bool", title: "On Demand iFrame Loading", description: "When DISABLED the iFrame will load with the dashboard and remain connected even when not visible.  When ENABLED the iFrame will only load content when visible, it will unload when closed and reload each time you open it.", defaultValue:false,  required: false)
     }
 metadata {
     definition (name: "iFrameAdvanced", namespace: "mbarone", author: "mbarone", importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/iFrameAdvanced.groovy") {
         capability "Actuator"
         attribute "iFrame", "text"
+        attribute "iFrameLauncher", "text"
     }
 }
 def installed() {
@@ -60,29 +67,38 @@ def updated() {
 }
 def setIframe() {
     if(src && src != ""){
-        if(!basicOrAdvanced){
-            sendEvent(name: "iFrame", value: "<div style='height: 100%; width: 100%'><iframe src='${src}' style='height: 100%; width:100%; border: none;'></iframe><div>")
+        sendEvent(name: "iFrame", value: "<div style='height: 100%; width: 100%'><iframe src='${src}' style='height: 100%; width:100%; border: none;'></iframe><div>")
+
+
+        def launcher = ""
+        if(delayLoad){
+            launcher = launcher + "<button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='block';document.getElementById('${device.displayName.replaceAll('\\s','')}-iframe').src='${src}';>${openText}</button>"
         } else {
-            //var iFrameValue = "<div style='height: 100%; width: 100%'><iframe onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='block';document.getElementById('${device.displayName.replaceAll('\\s','')}-iframe').src='${src}'; src='${src}' style='height: 100%; width:100%; border: none;'></iframe><div>"
-             //                   +"<div id=${device.displayName.replaceAll('\\s','')} class='modal' style='display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:100;background-color:rgba(0,0,0,.85);'>"
-             //                       +"<iframe onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='none'; id='${device.displayName.replaceAll('\\s','')}-iframe' src=${src} style='height:100%;width:100%;border:none;'></iframe>"
-             //                   +"</div>"
-
-            //sendEvent(name: "iFrame", value: "<div onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='block';document.getElementById('${device.displayName.replaceAll('\\s','')}-iframe').src='${src}'; style='height: 100%; width: 100%'><iframe src='${src}' style='height: 100%; width:100%; border: none;'></iframe><div><div id=${device.displayName.replaceAll('\\s','')} class='modal' style='display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:100;background-color:rgba(0,0,0,.85);'><iframe onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='none'; id='${device.displayName.replaceAll('\\s','')}-iframe' src=${src} style='height:100%;width:100%;border:none;'></iframe></div>")
-
-            /*
-            var iFrameValue = "<button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='block';>${openText}</button>"
-                                +"<div id=${device.displayName.replaceAll('\\s','')} class='modal' style='display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:100;background-color:rgba(0,0,0,.85);'>"
-                                    +"<button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='none'; style='float:right;margin:5px;'>${closeText}</button>"
-                                    +"<button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}-iframe').src='${src}'; style='float:right;margin:5px;'>Refresh</button>"
-                                    +"<iframe id='${device.displayName.replaceAll('\\s','')}-iframe' src=${src} style='height:100%;width:100%;border:none;'></iframe>"
-                                +"</div>"
-            log.warn iFrameValue
-            sendEvent(name: "iFrame", value: "${iFrameValue}")
-            */
-            // buttons
-            sendEvent(name: "iFrame", value: "<button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='block';>${openText}</button><div id=${device.displayName.replaceAll('\\s','')} class='modal' style='display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:100;background-color:rgba(0,0,0,.85);'><button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='none'; style='float:right;margin:5px;'>${closeText}</button><button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}-iframe').src='${src}'; style='float:right;margin:5px;'>${refreshText}</button><iframe id='${device.displayName.replaceAll('\\s','')}-iframe' src=${src} style='height:100%;width:100%;border:none;'></iframe></div>")
+            launcher = launcher + "<button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='block';>${openText}</button>"
         }
+
+        launcher = launcher + "<div id=${device.displayName.replaceAll('\\s','')} class='modal' style='display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:100;background-color:rgba(0,0,0,.85);'>"
+        
+        if(delayLoad){
+            launcher = launcher + "<button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='none';document.getElementById('${device.displayName.replaceAll('\\s','')}-iframe').src=''; style='float:right;margin:5px;'>${closeText}</button>"
+        } else {
+            launcher = launcher + "<button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='none'; style='float:right;margin:5px;'>${closeText}</button>"
+        }
+
+        launcher = launcher + "<button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}-iframe').src='${src}'; style='float:right;margin:5px;'>${refreshText}</button>"
+
+        if(delayLoad){
+            launcher = launcher + "<iframe id='${device.displayName.replaceAll('\\s','')}-iframe' src=''"
+        } else {
+            launcher = launcher + "<iframe id='${device.displayName.replaceAll('\\s','')}-iframe' src=${src}"
+        }
+        if(width > 90 && height > 95){
+            launcher = launcher + " style='height:${height}%;width:${width}%;border:none;'></iframe></div>"
+        } else {
+            launcher = launcher + " style='height:${height}%;width:${width}%;border:none;left:0;position:absolute;'></iframe></div>"
+        }
+
+        sendEvent(name: "iFrameLauncher", value: launcher)
     } else {
         log.warn "No website to embed.  Set iFrame Url in device preferences."
     }

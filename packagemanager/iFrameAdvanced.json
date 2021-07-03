@@ -1,0 +1,18 @@
+{
+  "packageName": "iFrameAdvanced",
+  "author": "mbarone",
+  "version": "1.0.1",
+  "minimumHEVersion": "2.1.9",
+  "dateReleased": "2021-07-02",
+  "communityLink": "",
+  "releaseNotes": "Use iFrame content several ways on your dashboards",
+  "drivers": [
+    {
+      "id": "bz26a894-gd10-44c6-96a1-38ac0daab22f",
+      "name": "iFrameAdvanced",
+      "namespace": "mbarone",
+      "location": "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/iFrameAdvanced.groovy",
+      "required": true
+    }
+  ]
+}
