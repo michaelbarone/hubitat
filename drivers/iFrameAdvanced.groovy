@@ -72,9 +72,9 @@ def setIframe() {
 
         def launcher = ""
         if(delayLoad){
-            launcher = launcher + "<button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='block';document.getElementById('${device.displayName.replaceAll('\\s','')}-iframe').src='${src}';>${openText}</button>"
+            launcher = launcher + "<button style='height:100%;width:100%;' onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='block';document.getElementById('${device.displayName.replaceAll('\\s','')}-iframe').src='${src}';>${openText}</button>"
         } else {
-            launcher = launcher + "<button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='block';>${openText}</button>"
+            launcher = launcher + "<button style='height:100%;width:100%;' onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='block';>${openText}</button>"
         }
 
         launcher = launcher + "<div id=${device.displayName.replaceAll('\\s','')} class='modal' style='display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:100;background-color:rgba(0,0,0,.85);'>"
