@@ -73,7 +73,19 @@ def setVariable(varNum, data){
 }
 
 def setCombined(){
-    def data = device.currentValue("variable1") + "<br>" + device.currentValue("variable2") + "<br>" + device.currentValue("variable3") + "<br>" + device.currentValue("variable4")
+    def data = ""
+    if(device.currentValue("variable1") != null && device.currentValue("variable1") != ""){
+        data = data + device.currentValue("variable1") + "<br>"
+    }
+    if(device.currentValue("variable2") != null && device.currentValue("variable2") != ""){
+        data = data + device.currentValue("variable2") + "<br>"
+    }
+    if(device.currentValue("variable3") != null && device.currentValue("variable3") != ""){
+        data = data + device.currentValue("variable3") + "<br>"
+    }
+    if(device.currentValue("variable4") != null && device.currentValue("variable4") != ""){
+        data = data + device.currentValue("variable4")
+    }
     sendEvent(name:"combined", value: data)
 }
 
