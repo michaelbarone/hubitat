@@ -111,15 +111,16 @@ def parse(description) {
 
 		def uv = Math.round(msg.json.current.uv * 100) / 100
 		sendEvent(name:"uv", value:uv, displayed: true)
-		def uvIndex = "Good"
+		def uvIndex = "Low"
 		def uvColor = "Green"
 		Integer uvAdj = Math.round(uv * 100)
 		switch(uvAdj){
-			case 0..300: uvIndex = "Good";uvColor = "Green"; break;
+			case 0..300: uvIndex = "Low";uvColor = "Green"; break;
 			case 301..600: uvIndex = "Moderate";uvColor = "Yellow"; break;
-			case 601..800: uvIndex = "Unhealthy for Sensative Groups";uvColor = "Orange"; break;
-			case 801..5000: uvIndex = "Unhealthy";uvColor = "Red"; break;
-			default: uvIndex = "Good";uvColor = "Green"; break;
+			case 601..800: uvIndex = "High";uvColor = "Orange"; break;
+			case 801..1100: uvIndex = "Very High";uvColor = "Red"; break;
+			case 1101..5000: uvIndex = "Extreme";uvColor = "dark-purple"; break;
+			default: uvIndex = "Low";uvColor = "Green"; break;
 		}
 		sendEvent(name:"uvIndex", value:uvIndex, displayed: true)
 
