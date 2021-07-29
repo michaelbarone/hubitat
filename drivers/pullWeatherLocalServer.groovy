@@ -114,7 +114,6 @@ def parse(description) {
 		def uvIndex = "Good"
 		def uvColor = "Green"
 		Integer uvAdj = Math.round(uv * 100)
-		logDebug uvAdj
 		switch(uvAdj){
 			case 0..300: uvIndex = "Good";uvColor = "Green"; break;
 			case 301..600: uvIndex = "Moderate";uvColor = "Yellow"; break;
