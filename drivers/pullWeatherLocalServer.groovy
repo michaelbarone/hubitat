@@ -44,6 +44,9 @@ metadata {
 		
 		attribute "dailyTempHigh","number"
 		attribute "dailyTempLow","number"
+		attribute "uv","number"
+		attribute "aqi","number"
+		attribute "aqiIndex","string"
 		attribute "windSpeed","number"
 		attribute "weatherDescription","string"
 		
@@ -102,6 +105,22 @@ def parse(description) {
 		sendEvent(name:"humidity", value:msg.json.current.rh, unit: "%", displayed: true)
 		sendEvent(name:"weatherDescription", value:msg.json.current.weather.description, displayed: true)
 		
+		sendEvent(name:"uv", value:msg.json.current.uv, displayed: true)
+
+		Integer aqi = msg.json.current.aqi
+		def aqiIndex = "Good"
+		sendEvent(name:"aqi", value:msg.json.current.aqi, displayed: true)
+		switch(aqi){
+			case 0..50: aqiIndex = "Good"; break;
+			case 51..100: aqiIndex = "Moderate"; break;
+			case 100..150: aqiIndex = "Unhealthy for Sensative Groups"; break;
+			case 151..200: aqiIndex = "Unhealthy"; break;
+			case 201..300: aqiIndex = "Very Unhealthy"; break;
+			case 301..500: aqiIndex = "Hazardous"; break;
+			default: aqiIndex = "Good"; break;
+		}
+		sendEvent(name:"aqiIndex", value:aqiIndex, displayed: true)
+
 		//logDebug msg.json.current.wind_spd
 		sendEvent(name:"windSpeed", value:msg.json.current.wind_spd, unit: "mph", displayed: true)
 		
@@ -116,7 +135,7 @@ def parse(description) {
 		if(msg.json.daily.size > 0) {
 			def thisCount = msg.json.daily.size - 1
 			thisCount = thisCount.toInteger()
-			(1..thisCount).each {
+			(0..thisCount).each {
 				if(msg.json.daily[it].high_temp > forecastHighTemp){
 					forecastHighTemp = msg.json.daily[it].high_temp
 					forecastHighDate = msg.json.daily[it].datetime
@@ -197,7 +216,7 @@ def poll() {
 		)
     logDebug "hubaction is: " + hubAction
 	unschedule(noServerResponse)
-	runIn(10,noServerResponse)
+	runIn(15,noServerResponse)
 	sendHubCommand(hubAction)
 }
 
