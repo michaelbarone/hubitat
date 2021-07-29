@@ -47,6 +47,9 @@ metadata {
 		attribute "uv","number"
 		attribute "aqi","number"
 		attribute "aqiIndex","string"
+		attribute "dashTile","string"
+
+
 		attribute "windSpeed","number"
 		attribute "weatherDescription","string"
 		
@@ -105,21 +108,45 @@ def parse(description) {
 		sendEvent(name:"humidity", value:msg.json.current.rh, unit: "%", displayed: true)
 		sendEvent(name:"weatherDescription", value:msg.json.current.weather.description, displayed: true)
 		
-		sendEvent(name:"uv", value:msg.json.current.uv, displayed: true)
+
+		def uv = Math.round(msg.json.current.uv * 100) / 100
+		sendEvent(name:"uv", value:uv, displayed: true)
+		def uvIndex = "Good"
+		def uvColor = "Green"
+		Integer uvAdj = Math.round(uv * 100)
+		logDebug uvAdj
+		switch(uvAdj){
+			case 0..300: uvIndex = "Good";uvColor = "Green"; break;
+			case 301..600: uvIndex = "Moderate";uvColor = "Yellow"; break;
+			case 601..800: uvIndex = "Unhealthy for Sensative Groups";uvColor = "Orange"; break;
+			case 801..5000: uvIndex = "Unhealthy";uvColor = "Red"; break;
+			default: uvIndex = "Good";uvColor = "Green"; break;
+		}
+		sendEvent(name:"uvIndex", value:uvIndex, displayed: true)
+
 
 		Integer aqi = msg.json.current.aqi
 		def aqiIndex = "Good"
+		def aqiColor = "Green"
 		sendEvent(name:"aqi", value:msg.json.current.aqi, displayed: true)
 		switch(aqi){
-			case 0..50: aqiIndex = "Good"; break;
-			case 51..100: aqiIndex = "Moderate"; break;
-			case 100..150: aqiIndex = "Unhealthy for Sensative Groups"; break;
-			case 151..200: aqiIndex = "Unhealthy"; break;
-			case 201..300: aqiIndex = "Very Unhealthy"; break;
-			case 301..500: aqiIndex = "Hazardous"; break;
-			default: aqiIndex = "Good"; break;
+			case 0..50: aqiIndex = "Good";aqiColor = "Green"; break;
+			case 51..100: aqiIndex = "Moderate";aqiColor = "Yellow"; break;
+			case 100..150: aqiIndex = "Unhealthy for Sensative Groups";aqiColor = "Orange"; break;
+			case 151..200: aqiIndex = "Unhealthy";aqiColor = "Red"; break;
+			case 201..300: aqiIndex = "Very Unhealthy";aqiColor = "dark-purple"; break;
+			case 301..500: aqiIndex = "Hazardous";aqiColor = "rgb(98, 0, 2)"; break;
+			default: aqiIndex = "Good";aqiColor = "Green"; break;
 		}
 		sendEvent(name:"aqiIndex", value:aqiIndex, displayed: true)
+		
+
+		def tileData = "<table width='100%'>"
+		tileData += "<tr><td><div>AQI (0-500+):<br>${aqi} - <span style='color:${aqiColor};'>${aqiIndex}</span></div></td></tr>"
+		tileData += "<tr><td><div>UV (0-11+):<br>${uv} - <span style='color:${uvColor};'>${uvIndex}</span></div></td></tr>"
+		tileData += "</table>"
+
+		sendEvent(name:"dashTile", value:tileData, displayed: true)
 
 		//logDebug msg.json.current.wind_spd
 		sendEvent(name:"windSpeed", value:msg.json.current.wind_spd, unit: "mph", displayed: true)
