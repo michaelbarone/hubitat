@@ -45,6 +45,7 @@ metadata {
 		attribute "dailyTempHigh","number"
 		attribute "dailyTempLow","number"
 		attribute "uv","number"
+		attribute "uvIndex","string"
 		attribute "aqi","number"
 		attribute "aqiIndex","string"
 		attribute "dashTile","string"
@@ -134,8 +135,8 @@ def parse(description) {
 			case 51..100: aqiIndex = "Moderate";aqiColor = "Yellow"; break;
 			case 100..150: aqiIndex = "Unhealthy for Sensative Groups";aqiColor = "Orange"; break;
 			case 151..200: aqiIndex = "Unhealthy";aqiColor = "Red"; break;
-			case 201..300: aqiIndex = "Very Unhealthy";aqiColor = "dark-purple"; break;
-			case 301..500: aqiIndex = "Hazardous";aqiColor = "rgb(98, 0, 2)"; break;
+			case 201..300: aqiIndex = "Very Unhealthy";aqiColor = "Red"; break;
+			case 301..500: aqiIndex = "Hazardous";aqiColor = "Red"; break;
 			default: aqiIndex = "Good";aqiColor = "Green"; break;
 		}
 		sendEvent(name:"aqiIndex", value:aqiIndex, displayed: true)
