@@ -133,7 +133,7 @@ def parse(description) {
 		switch(aqi){
 			case 0..50: aqiIndex = "Good";aqiColor = "Green"; break;
 			case 51..100: aqiIndex = "Moderate";aqiColor = "Yellow"; break;
-			case 100..150: aqiIndex = "Unhealthy for Sensative Groups";aqiColor = "Orange"; break;
+			case 100..150: aqiIndex = "Unhealthy-ish";aqiColor = "Orange"; break;
 			case 151..200: aqiIndex = "Unhealthy";aqiColor = "Red"; break;
 			case 201..300: aqiIndex = "Very Unhealthy";aqiColor = "Red"; break;
 			case 301..500: aqiIndex = "Hazardous";aqiColor = "Red"; break;
