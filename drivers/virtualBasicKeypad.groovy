@@ -16,8 +16,9 @@
  *    Date        Who            What
  *    ----        ---            ----
  * 	 10-06-20	mbarone			initial release 
- * 	 10-06-20	mbarone			added attribute Notifcation, which updates with a bad code input message if enabled.  this can be used to trigger a RM notifcation if you watch this attribute for *changed* 
+ * 	 10-06-20	mbarone			added attribute Notification, which updates with a bad code input message if enabled.  this can be used to trigger a RM notification  if you watch this attribute for *changed* 
  * 	 03-10-21	mbarone			removed the SecurityKeypad capability as this was causing issues when present with the LockCodes capability and is not needed for the functionality of this addon
+ * 	 11-04-21	mbarone			fixed security issue found by @arnb, and added an option to enable or disable.. enabled by default
 */
 
 import groovy.json.JsonSlurper
@@ -25,7 +26,7 @@ import groovy.json.JsonOutput
 
 def setVersion(){
     state.name = "Virtual Basic Keypad"
-	state.version = "1.0.3"
+	state.version = "1.0.4"
 }
 
 metadata {
@@ -48,6 +49,7 @@ metadata {
         input name: "cancelAlertsOnDisarm", type: "bool", title: "Cancel Alerts on Disarm", defaultValue: true
 		input name: "src", type: "text", title: "iFrame Url", required: false, description: "paste the direct dashboard url for this keypad's dashboard"
 		input name: "noCodeRequired", type: "text", title: "No Code Required", required: false, description: "These HSM commands require no code.  Separate multiple by comma:  armAway,armHome"
+		input name: "noCodeRequiredDisarmedOnly", type: "bool", title: "HSM Disarmed required for No Code commands", required: true,defaultValue: true, description: "When 'On', HSM will need to be 'disarmed' to execute commands that do not require a code."
 		input name: "armDelaySeconds", type: "number", title: "Command Delay", required: true, defaultValue: 0, description: "number of seconds before sending command after successful code entry"
 		input name: "armDelaySecondsGroup", type: "text", title: "Commands to Delay", required: false, description: "These HSM commands will be delayed by the set Command Delay.  Separate multiple by comma:  armAway,armHome"
 		input name: "alertOnFailedAttempts", type: "number", title: "Failed Attempts before Notify", required: true, defaultValue: 0, description: "Number of Failed Code entries before the 'Notification' attribute is updated with the failed notice.  0 = disabled"
@@ -130,7 +132,7 @@ def checkInputCode(action){
 	
 	def codeAccepted = false
 	
-	if(noCodeRequired.contains(action)) {
+	if(noCodeRequired.contains(action) && (!noCodeRequiredDisarmedOnly || noCodeRequiredDisarmedOnly && location.hsmStatus == 'disarmed')) {
 		codeAccepted = true
 		sendEvent(name:"UserInput", value: "Success", descriptionText: "No code was required to execute " + action, displayed: true)
 		if (logEnable) log.debug "${action} executed with no entered code"

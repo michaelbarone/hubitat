@@ -259,6 +259,11 @@ def pageConfig() {
 
 					paragraph ""
 					paragraph ""
+					input "noCodeRequiredDisarmedOnly", "bool", required: true, defaultValue: true, submitOnChange: true,
+						title: "When 'On', HSM will need to be 'disarmed' to execute commands that do not require a code. Default: On/true"
+
+					paragraph ""
+					paragraph ""
 					input "cancelAlertsOnDisarm", "bool", required: true, defaultValue: true, submitOnChange: true,
 						title: "When 'On', HSM alerts will be cancelled when any of the disarm commands are used. Default: On/true"
 						paragraph "Disarm Commands: Custom-Disarm, HSM-disarm, HSM-disarmAll, HSM-disarmRules, any mode or custom command with 'disarm' in the name"

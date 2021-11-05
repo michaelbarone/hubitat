@@ -35,13 +35,14 @@
  * 	 07-02-21	mbarone			Added new "button" attribute, which adds a button to a dashboard which will show the keypad iframe after clicking, this saves dashboard real estate when not using the keypad
  * 	 07-12-21	mbarone			updated autoClose logic timeout for closing the overlay iframe if that option is selected
  * 	 07-29-21	mbarone			added option to Attempt Auto Centering of keypad when overley iframe is used
+ * 	 11-04-21	mbarone			fixed security issue found by @arnb and @scubamikejax904, and added an option to enable or disable.. enabled by default
  */
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 
 def setVersion(){
-	state.version = "1.0.20"
+	state.version = "1.0.21"
 }
  
 metadata {
@@ -115,6 +116,10 @@ def configureSettings(settings){
 				
 			case "noCodeRequired":
 				state.noCodeRequired = it.value
+				break			
+				
+			case "noCodeRequiredDisarmedOnly":
+				state.noCodeRequiredDisarmedOnly = it.value
 				break
 				
 			case "defaultMode":
@@ -259,7 +264,7 @@ def checkInputCode(btn){
 	
 	def codeAccepted = false
 	
-	if(state.noCodeRequired.any{btn.contains(it)}) {
+	if(state.noCodeRequired.any{btn.contains(it)} && (!state.noCodeRequiredDisarmedOnly || (state.noCodeRequiredDisarmedOnly && location.hsmStatus == 'disarmed'))) {
 		codeAccepted = true
 		sendEvent(name:"UserInput", value: "Success", descriptionText: "No code was required to execute " + btn, displayed: true)
 		if (logEnable) log.debug "${btn} executed with no entered code"
