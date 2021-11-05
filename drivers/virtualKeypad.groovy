@@ -79,6 +79,7 @@ metadata {
 
 def configureSettings(settings){
 	state.noCodeRequired = ["none"]
+	state.noCodeRequiredDisarmedOnly = true
 	state.defaultMode = ""
 	state.defaultModeTrigger = ["none"]
 	state.armDelaySecondsGroup = ["none"]
