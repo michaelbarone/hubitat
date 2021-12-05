@@ -60,6 +60,7 @@ metadata {
         capability "Actuator"
         attribute "iFrame", "text"
         attribute "iFrameLauncher", "text"
+        attribute "iFrameLauncherCharacterCount", "text"
     }
 }
 def installed() {
@@ -109,6 +110,19 @@ def setIframe() {
         }
 
         sendEvent(name: "iFrameLauncher", value: launcher)
+
+        def launcherLength = launcher.length()
+
+        def characterCountText = "<text style="
+        if(launcherLength > 1024){
+            characterCountText = characterCountText + "'color:red'"
+        } else if(launcherLength < 980){
+            characterCountText = characterCountText + "'color:green'"
+        } else {
+            characterCountText = characterCountText + "'color:orange'"
+        }
+        characterCountText = characterCountText + ">${launcherLength}</text>"
+        sendEvent(name: "iFrameLauncherCharacterCount", value: characterCountText)
     } else {
         log.warn "No website to embed.  Set iFrame Url in device preferences."
     }

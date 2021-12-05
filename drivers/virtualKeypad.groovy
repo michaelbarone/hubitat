@@ -36,13 +36,14 @@
  * 	 07-12-21	mbarone			updated autoClose logic timeout for closing the overlay iframe if that option is selected
  * 	 07-29-21	mbarone			added option to Attempt Auto Centering of keypad when overley iframe is used
  * 	 11-04-21	mbarone			fixed security issue found by @arnb and @scubamikejax904, and added an option to enable or disable.. enabled by default
+ * 	 12-05-21	mbarone			surfaced other modal options in preferences
  */
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 
 def setVersion(){
-	state.version = "1.0.21"
+	state.version = "1.0.22"
 }
  
 metadata {
@@ -69,6 +70,7 @@ metadata {
 		input("keypadHeight", "number", title: "Height of keypad when in view as a percentage (default: 100)", defaultValue:100, required: false)
 		input("keypadAutoCenter", "bool", title: "Try to Auto Center the keypad when in view", defaultValue:false, required: false)
 		input("AutoCloseDelay", "number", title: "Number of seconds to automatically close the Keypad after opening it with dashboard button (default: 60)", defaultValue:60, required: false)
+        input("modalCSS", "text", title: "Style to apply to modal", description: "defaults: position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,.85);", defaultValue:"position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,.85);", required: false)
 	}
 
 	attribute "Details","string"
@@ -192,15 +194,18 @@ def updated() {
 		}
 	}
 
+	if(modalCSS == null) {
+		log.info "setting modalCSS as it was previously unset"
+		device.updateSetting("modalCSS",[value:"position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,.85)",type:"text"])
+	}
 
-	//sendEvent(name: "Button", value: "<button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='block';>${openText}</button><div id=${device.displayName.replaceAll('\\s','')} class='modal' style='display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:100;background-color:rgba(0,0,0,.85);'><button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='none'; style='float:right;margin:5px;'>${closeText}</button><button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}-iframe').src='${src}'; style='float:right;margin:5px;'>${refreshText}</button><iframe id='${device.displayName.replaceAll('\\s','')}-iframe' src=${src} style='height:${keypadHeight};width:${keypadWidth};border:none;left:0;position:absolute;'></iframe></div>")
 	if(keypadWidth>90){
-		sendEvent(name: "Button", value: "<button onclick=\"document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='block';autoClose = setTimeout(function(){document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='none'},${AutoCloseDelay}000);\">${openText}</button><div id=${device.displayName.replaceAll('\\s','')} class='modal' style='display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:100;background-color:rgba(0,0,0,.85);'><button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='none';clearTimeout(autoClose); style='float:right;margin:5px;'>${closeText}</button><button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}-iframe').src='${src}'; style='float:right;margin:5px;'>${refreshText}</button><iframe id='${device.displayName.replaceAll('\\s','')}-iframe' src=${src} style='height:95%;width:${keypadWidth}%;border:none;'></iframe></div>")
+		sendEvent(name: "Button", value: "<button onclick=\"document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='block';autoClose = setTimeout(function(){document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='none'},${AutoCloseDelay}000);\">${openText}</button><div id=${device.displayName.replaceAll('\\s','')} class='modal' style='display:none;z-index:100;${modalCSS}'><button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='none';clearTimeout(autoClose); style='float:right;margin:5px;'>${closeText}</button><button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}-iframe').src='${src}'; style='float:right;margin:5px;'>${refreshText}</button><iframe id='${device.displayName.replaceAll('\\s','')}-iframe' src=${src} style='height:95%;width:${keypadWidth}%;border:none;'></iframe></div>")
 	} else {
 		if(keypadAutoCenter){
-			sendEvent(name: "Button", value: "<button onclick=\"document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='block';autoClose = setTimeout(function(){document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='none'},${AutoCloseDelay}000);\">${openText}</button><div id=${device.displayName.replaceAll('\\s','')} class='modal' style='display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:100;background-color:rgba(0,0,0,.85);'><button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='none';clearTimeout(autoClose); style='float:right;margin:5px;'>${closeText}</button><button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}-iframe').src='${src}'; style='float:right;margin:5px;'>${refreshText}</button><iframe id='${device.displayName.replaceAll('\\s','')}-iframe' src=${src} style='height:${keypadHeight}%;width:${keypadWidth}%;border:none;'></iframe></div>")
+			sendEvent(name: "Button", value: "<button onclick=\"document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='block';autoClose = setTimeout(function(){document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='none'},${AutoCloseDelay}000);\">${openText}</button><div id=${device.displayName.replaceAll('\\s','')} class='modal' style='display:none;z-index:100;${modalCSS}'><button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='none';clearTimeout(autoClose); style='float:right;margin:5px;'>${closeText}</button><button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}-iframe').src='${src}'; style='float:right;margin:5px;'>${refreshText}</button><iframe id='${device.displayName.replaceAll('\\s','')}-iframe' src=${src} style='height:${keypadHeight}%;width:${keypadWidth}%;border:none;'></iframe></div>")
 		} else {
-			sendEvent(name: "Button", value: "<button onclick=\"document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='block';autoClose = setTimeout(function(){document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='none'},${AutoCloseDelay}000);\">${openText}</button><div id=${device.displayName.replaceAll('\\s','')} class='modal' style='display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:100;background-color:rgba(0,0,0,.85);'><button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='none';clearTimeout(autoClose); style='float:right;margin:5px;'>${closeText}</button><button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}-iframe').src='${src}'; style='float:right;margin:5px;'>${refreshText}</button><iframe id='${device.displayName.replaceAll('\\s','')}-iframe' src=${src} style='height:${keypadHeight}%;width:${keypadWidth}%;border:none;left:0;position:absolute;'></iframe></div>")
+			sendEvent(name: "Button", value: "<button onclick=\"document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='block';autoClose = setTimeout(function(){document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='none'},${AutoCloseDelay}000);\">${openText}</button><div id=${device.displayName.replaceAll('\\s','')} class='modal' style='display:none;z-index:100;${modalCSS}'><button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='none';clearTimeout(autoClose); style='float:right;margin:5px;'>${closeText}</button><button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}-iframe').src='${src}'; style='float:right;margin:5px;'>${refreshText}</button><iframe id='${device.displayName.replaceAll('\\s','')}-iframe' src=${src} style='height:${keypadHeight}%;width:${keypadWidth}%;border:none;left:0;position:absolute;'></iframe></div>")
 		}
 	}
 
