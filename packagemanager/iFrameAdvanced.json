@@ -1,11 +1,11 @@
 {
   "packageName": "iFrameAdvanced",
   "author": "mbarone",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "minimumHEVersion": "2.1.9",
   "dateReleased": "2021-07-02",
   "communityLink": "",
-  "releaseNotes": "Use iFrame content several ways on your dashboards",
+  "releaseNotes": "Use iFrame content several ways on your dashboards.  If upgrading, you will need to go into each device that uses this driver and save the preferences.",
   "drivers": [
     {
       "id": "bz26a894-gd10-44c6-96a1-38ac0daab22f",

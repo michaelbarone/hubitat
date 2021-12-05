@@ -37,10 +37,11 @@
  *    Date            Who            What
  *    ----            ---            ----
  * 	 07-02-2021 	mbarone			initial release 
+ * 	 12-05-2021 	mbarone			added autoCloseDelay option and surfaced other modal options in preferences
  */
 
 def setVersion(){
-	state.version = "1.0.1"
+	state.version = "1.0.2"
 }
 
 preferences {
@@ -51,6 +52,8 @@ preferences {
 		input("width", "number", title: "Width of iFrame when in view as a percentage (default: 100)", defaultValue:100, required: false)
 		input("height", "number", title: "Height of iFrame when in view as a percentage (default: 100)", defaultValue:100, required: false)
         input("delayLoad", "bool", title: "On Demand iFrame Loading", description: "When DISABLED the iFrame will load with the dashboard and remain connected even when not visible.  When ENABLED the iFrame will only load content when visible, it will unload when closed and reload each time you open it.", defaultValue:false,  required: false)
+        input("autoCloseDelay", "number", title: "Number of seconds to automatically close the iFrame after opening it (default: 0, 0 = disabled)", description: "This countdown starts when the modal is opened, and cannot be cancelled. It will close the modal at the end of the count down unless it has already been closed", defaultValue:0, required: false)
+        input("modalCSS", "text", title: "Style to apply to modal", description: "defaults: position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,.85);", defaultValue:"position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,.85);", required: false)
     }
 metadata {
     definition (name: "iFrameAdvanced", namespace: "mbarone", author: "mbarone", importUrl: "https://raw.githubusercontent.com/michaelbarone/hubitat/master/drivers/iFrameAdvanced.groovy") {
@@ -71,13 +74,20 @@ def setIframe() {
 
 
         def launcher = ""
-        if(delayLoad){
-            launcher = launcher + "<button style='height:100%;width:100%;' onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='block';document.getElementById('${device.displayName.replaceAll('\\s','')}-iframe').src='${src}';>${openText}</button>"
+        if(autoCloseDelay && autoCloseDelay > 0){
+            launcher = launcher + "<button style='height:100%;width:100%;' onclick='autoClose = setTimeout(function(){document.getElementById(`${device.displayName.replaceAll('\\s','')}`).style.display=`none`},${autoCloseDelay}000);"
         } else {
-            launcher = launcher + "<button style='height:100%;width:100%;' onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='block';>${openText}</button>"
+            launcher = launcher + "<button style='height:100%;width:100%;' onclick='"
         }
 
-        launcher = launcher + "<div id=${device.displayName.replaceAll('\\s','')} class='modal' style='display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:100;background-color:rgba(0,0,0,.85);'>"
+
+        if(delayLoad){
+            launcher = launcher + "document.getElementById(`${device.displayName.replaceAll('\\s','')}`).style.display=`block`;document.getElementById(`${device.displayName.replaceAll('\\s','')}-iframe`).src=`${src}`;'>${openText}</button>"
+        } else {
+            launcher = launcher + "document.getElementById(`${device.displayName.replaceAll('\\s','')}`).style.display=`block`;'>${openText}</button>"
+        }
+
+        launcher = launcher + "<div id=${device.displayName.replaceAll('\\s','')} class='modal' style='display:none;z-index:100;${modalCSS}'>"
         
         if(delayLoad){
             launcher = launcher + "<button onclick=document.getElementById('${device.displayName.replaceAll('\\s','')}').style.display='none';document.getElementById('${device.displayName.replaceAll('\\s','')}-iframe').src=''; style='float:right;margin:5px;'>${closeText}</button>"
