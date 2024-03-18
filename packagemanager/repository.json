@@ -16,18 +16,6 @@
       "id": "61d0fabf-d211-4b76-968d-2beed62788d6"
     },
     {
-      "id": "5f5f9c1f-940e-4246-b204-30f77aee470d",
-      "name": "Virtual Basic Keypad",
-      "category": "Security",
-      "location": "https://raw.githubusercontent.com/michaelbarone/hubitat/master/packagemanager/virtualBasicKeypadManifest.json",
-      "description": "Create Basic Virtual Keypads which mimic hardware keypads that only change HSM.  This virtual device has BASIC functionality and is an ADVANCED setup.  Unless you specifically want this version, use the main 'Virtual Keypad'.  Install/configure instructions are in the '[RELEASE] Virtual Keypad' release thread.",
-      "tags": [
-        "Alarm Systems",
-        "Dashboards",
-        "Safety & Security"
-      ]
-    },
-    {
       "id": "bx26c894-ed10-44c6-96c1-38ac0daab22f",
       "name": "SABnzbd",
       "category": "Integrations",
@@ -38,8 +26,8 @@
         "Multimedia",
         "Tools & Utilities"
       ]
-	},
-  {
+    },
+    {
     "id": "bz26a894-gd10-44c6-96a1-38ac0daab22f",
     "name": "iFrameAdvanced",
     "category": "Integrations",
@@ -50,6 +38,6 @@
       "Multimedia",
       "Tools & Utilities"
     ]
-  }
- ]
+    }
+  ]
 }
